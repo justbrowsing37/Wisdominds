@@ -299,6 +299,14 @@ h1.hero-headline em{color:var(--gold); font-style:normal;}
 .hero-slide:nth-child(2){ background-image:url("../images/barbershop-chair.jpg"); animation-delay:5.5s; }
 .hero-slide:nth-child(3){ background-image:url("../images/barbershop-interior.jpg"); animation-delay:11s; }
 .hero-slide:nth-child(4){ background-image:url("../images/barbershop-shave.avif"); animation-delay:16.5s; }
+
+/* ============ music page: photo hero slides (overrides the barbershop
+   defaults above via the extra .hero-photo-music class, same slideshow
+   mechanics) ============ */
+.hero-photo-music .hero-slide:nth-child(1){ background-image:url("../images/music1.jpg"); animation-delay:0s; }
+.hero-photo-music .hero-slide:nth-child(2){ background-image:url("../images/music2.jpg"); animation-delay:5.5s; }
+.hero-photo-music .hero-slide:nth-child(3){ background-image:url("../images/music3.jpg"); animation-delay:11s; }
+.hero-photo-music .hero-slide:nth-child(4){ background-image:url("../images/music4.jpg"); animation-delay:16.5s; }
 .hero-scrim{
   position:absolute; inset:0; z-index:-1;
   background:
