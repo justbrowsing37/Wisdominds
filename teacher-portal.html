@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teacher Portal | Wisdominds Music School</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+<script>
+  (function(){
+    var saved = localStorage.getItem("wisdominds-theme");
+    if(saved){ document.documentElement.setAttribute("data-theme", saved); }
+  })();
+</script>
+</head>
+<body>
+
+<header class="site">
+  <div class="header-row wrap">
+    <a class="mark" href="index.html"><span class="mark-dot" aria-hidden="true"></span> Wisdominds Cooperative</a>
+    <nav class="nav-links">
+      <a href="music.html">Music School</a>
+    </nav>
+    <div class="header-actions">
+      <button class="nav-toggle" id="navToggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      </button>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+        <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4.2"></circle>
+          <path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"></path>
+        </svg>
+      </button>
+      <button class="btn btn-outline btn-sm" id="signOutBtn" type="button">Sign Out</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap portal-main">
+  <div class="portal-welcome">
+    <h1 id="welcomeHeading">Welcome back</h1>
+    <p id="welcomeSub">Manage your weekly availability and see who's booked in.</p>
+  </div>
+
+  <div class="portal-grid">
+    <section class="card portal-section">
+      <h2>Your Weekly Availability</h2>
+      <form class="availability-form" id="availabilityForm">
+        <label>Day
+          <select name="day_of_week" required>
+            <option value="0">Sunday</option>
+            <option value="1" selected>Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+          </select>
+        </label>
+        <label>Start
+          <input type="time" name="start_time" value="10:00" required>
+        </label>
+        <label>End
+          <input type="time" name="end_time" value="17:00" required>
+        </label>
+        <button class="btn btn-gold" type="submit">Add Slot</button>
+      </form>
+      <div class="slot-list" id="slotList">
+        <p class="empty-note">Loading availability…</p>
+      </div>
+    </section>
+
+    <section class="card portal-section">
+      <h2>Upcoming Bookings</h2>
+      <div class="booking-list" id="bookingList">
+        <p class="empty-note">Loading bookings…</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/booking.js"></script>
+<script>
+  (function(){
+    var root = document.documentElement;
+    var toggle = document.getElementById("themeToggle");
+    var sunIcon = '<circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"></path>';
+    var moonIcon = '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"></path>';
+    function currentTheme(){ return root.getAttribute("data-theme") || "light"; }
+    function paint(theme){
+      var svg = toggle.querySelector("svg");
+      svg.innerHTML = theme === "dark" ? sunIcon : moonIcon;
+      toggle.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+      toggle.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+    }
+    paint(currentTheme());
+    toggle.addEventListener("click", function(){
+      var next = currentTheme() === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      localStorage.setItem("wisdominds-theme", next);
+      paint(next);
+    });
+  })();
+
+  document.getElementById("signOutBtn").addEventListener("click", signOut);
+
+  var providerRow = null;
+
+  async function loadProvider(profile) {
+    var { data, error } = await supabaseClient
+      .from("providers")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .single();
+    if (error || !data) {
+      document.querySelector(".portal-grid").innerHTML =
+        '<p class="empty-note">No provider record is linked to your account yet — an admin needs to create one before you can manage availability.</p>';
+      return null;
+    }
+    return data;
+  }
+
+  async function renderAvailability() {
+    var { data } = await supabaseClient
+      .from("availability")
+      .select("*")
+      .eq("provider_id", providerRow.id)
+      .order("day_of_week");
+
+    var list = document.getElementById("slotList");
+    if (!data || data.length === 0) {
+      list.innerHTML = '<p class="empty-note">No open slots yet — add one above.</p>';
+      return;
+    }
+    list.innerHTML = "";
+    data.forEach(function (row) {
+      var el = document.createElement("div");
+      el.className = "slot-row";
+      el.innerHTML =
+        '<span class="slot-day">' + DAY_NAMES[row.day_of_week] + '</span>' +
+        '<span class="slot-time">' + formatTime(row.start_time) + ' – ' + formatTime(row.end_time) + '</span>' +
+        '<button class="slot-remove" type="button" aria-label="Remove slot" data-id="' + row.id + '">✕</button>';
+      list.appendChild(el);
+    });
+    list.querySelectorAll(".slot-remove").forEach(function (btn) {
+      btn.addEventListener("click", async function () {
+        await supabaseClient.from("availability").delete().eq("id", btn.dataset.id);
+        renderAvailability();
+      });
+    });
+  }
+
+  async function renderBookings() {
+    var { data } = await supabaseClient
+      .from("bookings")
+      .select("*, services(name), profiles:student_profile_id(name), payments(status)")
+      .eq("provider_id", providerRow.id)
+      .gte("slot_start", new Date().toISOString())
+      .in("status", ["pending", "confirmed"])
+      .order("slot_start");
+
+    var list = document.getElementById("bookingList");
+    if (!data || data.length === 0) {
+      list.innerHTML = '<p class="empty-note">No upcoming bookings.</p>';
+      return;
+    }
+    list.innerHTML = "";
+    data.forEach(function (b) {
+      var paymentStatus = b.payments && b.payments[0] ? b.payments[0].status : "pending";
+      var el = document.createElement("div");
+      el.className = "booking-row";
+      el.innerHTML =
+        '<span class="booking-when">' + formatDateTime(new Date(b.slot_start)) + '</span>' +
+        '<span class="booking-what">' + (b.services ? b.services.name : "Lesson") + '</span>' +
+        '<span class="booking-who">' + (b.profiles ? b.profiles.name : "Student") + '</span>' +
+        '<span class="booking-tags">' +
+          '<span class="pill pill-' + b.status + '">' + b.status + '</span>' +
+          '<span class="pill pill-' + (paymentStatus === "paid" ? "paid" : "pending") + '">' + paymentStatus + '</span>' +
+          '<button class="btn btn-outline btn-sm cancel-booking-btn" type="button" data-id="' + b.id + '" data-paid="' + (paymentStatus === "paid") + '">Cancel</button>' +
+        '</span>';
+      list.appendChild(el);
+    });
+    list.querySelectorAll(".cancel-booking-btn").forEach(function (btn) {
+      btn.addEventListener("click", async function () {
+        btn.disabled = true;
+        var cancelled = await cancelBooking(btn.dataset.id, btn.dataset.paid === "true");
+        if (cancelled) renderBookings();
+        else btn.disabled = false;
+      });
+    });
+  }
+
+  document.getElementById("availabilityForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var form = e.target;
+    var submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      await supabaseClient.from("availability").insert({
+        provider_id: providerRow.id,
+        is_recurring: true,
+        day_of_week: Number(form.day_of_week.value),
+        start_time: form.start_time.value,
+        end_time: form.end_time.value
+      });
+      renderAvailability();
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  (async function init() {
+    var profile = await requireRole(["teacher", "admin"]);
+    if (!profile) return;
+
+    document.getElementById("welcomeHeading").textContent = "Welcome back, " + profile.name;
+
+    providerRow = await loadProvider(profile);
+    if (!providerRow) return;
+
+    if (providerRow.property === "barbers") {
+      document.title = "Provider Portal | Wisdominds Barbers & Braiders";
+      document.getElementById("welcomeSub").textContent = "Manage your weekly availability and see who's booked in.";
+      document.querySelector('.nav-links a[href="music.html"]').outerHTML =
+        '<a href="barbers.html">Barbers &amp; Braiders</a>';
+    }
+
+    renderAvailability();
+    renderBookings();
+  })();
+</script>
+
+<script src="assets/js/nav-toggle.js"></script>
+
+</body>
+</html>

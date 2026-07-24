@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log In | Wisdominds Cooperative</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+<script>
+  (function(){
+    var saved = localStorage.getItem("wisdominds-theme");
+    if(saved){ document.documentElement.setAttribute("data-theme", saved); }
+  })();
+</script>
+</head>
+<body>
+
+<header class="site">
+  <div class="header-row wrap">
+    <a class="mark" href="index.html"><span class="mark-dot" aria-hidden="true"></span> Wisdominds Cooperative</a>
+    <nav class="nav-links">
+      <a href="barbers.html">Barbers</a>
+      <a href="music.html">Music</a>
+      <a href="index.html#membership">Membership</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button class="nav-toggle" id="navToggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      </button>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+        <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4.2"></circle>
+          <path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"></path>
+        </svg>
+      </button>
+      <a class="btn btn-gold btn-sm" href="register.html">Register</a>
+    </div>
+  </div>
+</header>
+
+<main class="auth-shell">
+  <div class="card auth-card">
+    <h1>Log In</h1>
+    <p class="section-sub">Sign in to book lessons, manage availability, or check your schedule.</p>
+
+    <div class="auth-message" id="authMessage"></div>
+
+    <form class="auth-form" id="loginForm">
+      <label>Email
+        <input type="email" name="email" autocomplete="email" required>
+      </label>
+      <label>Password
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn btn-gold" type="submit" id="loginSubmit">Log In</button>
+    </form>
+
+    <p class="auth-switch">New here? <a href="register.html" id="createAccountLink">Create an account</a></p>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>
+  (function(){
+    var root = document.documentElement;
+    var toggle = document.getElementById("themeToggle");
+
+    var sunIcon = '<circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"></path>';
+    var moonIcon = '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"></path>';
+
+    function currentTheme(){
+      var stored = root.getAttribute("data-theme");
+      return stored || "light";
+    }
+
+    function paint(theme){
+      var svg = toggle.querySelector("svg");
+      svg.innerHTML = theme === "dark" ? sunIcon : moonIcon;
+      toggle.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+      toggle.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+    }
+
+    paint(currentTheme());
+
+    toggle.addEventListener("click", function(){
+      var next = currentTheme() === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      localStorage.setItem("wisdominds-theme", next);
+      paint(next);
+    });
+  })();
+
+  function showMessage(text, kind){
+    var el = document.getElementById("authMessage");
+    el.textContent = text;
+    el.className = "auth-message is-visible is-" + kind;
+  }
+
+  redirectIfSignedIn();
+
+  // Carry ?next= through to register.html too, so someone bounced here from
+  // a booking link who chooses "Create an account" instead of logging in
+  // doesn't lose that destination.
+  (function(){
+    var next = new URLSearchParams(window.location.search).get("next");
+    if (next) {
+      document.getElementById("createAccountLink").href = "register.html?next=" + encodeURIComponent(next);
+      if (next.indexOf("property=barbers") !== -1) {
+        document.title = "Log In | Wisdominds Barbers & Braiders";
+      }
+    }
+  })();
+
+  document.getElementById("loginForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    var form = e.target;
+    var submitBtn = document.getElementById("loginSubmit");
+    var email = form.email.value.trim();
+    var password = form.password.value;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Logging In…";
+
+    var { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Log In";
+
+    if (error) {
+      showMessage(error.message, "error");
+      return;
+    }
+
+    var profile = await getProfile(data.user.id);
+    window.location.href = destinationAfterAuth(profile);
+  });
+</script>
+
+<script src="assets/js/nav-toggle.js"></script>
+
+</body>
+</html>

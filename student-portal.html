@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Lessons | Wisdominds Music School</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+<script>
+  (function(){
+    var saved = localStorage.getItem("wisdominds-theme");
+    if(saved){ document.documentElement.setAttribute("data-theme", saved); }
+  })();
+</script>
+</head>
+<body>
+
+<header class="site">
+  <div class="header-row wrap">
+    <a class="mark" href="index.html"><span class="mark-dot" aria-hidden="true"></span> Wisdominds Cooperative</a>
+    <nav class="nav-links">
+      <a href="music.html" id="backNavLink">Music School</a>
+    </nav>
+    <div class="header-actions">
+      <button class="nav-toggle" id="navToggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      </button>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+        <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4.2"></circle>
+          <path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"></path>
+        </svg>
+      </button>
+      <button class="btn btn-outline btn-sm" id="signOutBtn" type="button">Sign Out</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap portal-main">
+  <div class="portal-welcome">
+    <h1 id="welcomeHeading">Welcome back</h1>
+    <p>Book a lesson below, or check what's already on your schedule.</p>
+  </div>
+
+  <div class="portal-grid">
+    <section class="card portal-section">
+      <h2 id="bookSectionHeading">Book a Lesson</h2>
+      <form class="booking-form" id="bookingSetupForm">
+        <label><span class="provider-label">Teacher</span>
+          <select name="provider_id" id="providerSelect" required></select>
+        </label>
+        <label>Service
+          <select name="service_id" id="serviceSelect" required></select>
+        </label>
+        <button class="btn btn-gold" type="submit">Find Open Times</button>
+      </form>
+      <div class="slot-picker" id="slotPicker">
+        <p class="empty-note">Choose a teacher and lesson type, then find open times.</p>
+      </div>
+    </section>
+
+    <section class="card portal-section">
+      <h2>My Upcoming Lessons</h2>
+      <div class="booking-list" id="myBookingList">
+        <p class="empty-note">Loading…</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/booking.js"></script>
+<script>
+  (function(){
+    var root = document.documentElement;
+    var toggle = document.getElementById("themeToggle");
+    var sunIcon = '<circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"></path>';
+    var moonIcon = '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"></path>';
+    function currentTheme(){ return root.getAttribute("data-theme") || "light"; }
+    function paint(theme){
+      var svg = toggle.querySelector("svg");
+      svg.innerHTML = theme === "dark" ? sunIcon : moonIcon;
+      toggle.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+      toggle.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+    }
+    paint(currentTheme());
+    toggle.addEventListener("click", function(){
+      var next = currentTheme() === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      localStorage.setItem("wisdominds-theme", next);
+      paint(next);
+    });
+  })();
+
+  document.getElementById("signOutBtn").addEventListener("click", signOut);
+
+  var myProfile = null;
+  var services = [];
+  // Which property's services/providers to browse — same page serves Music
+  // and Barbers (and Coop later) via ?property=, defaulting to music since
+  // that's this page's original context.
+  var property = new URLSearchParams(window.location.search).get("property") || "music";
+  var providerLabel = property === "barbers" ? "Barber" : "Teacher";
+
+  async function populateSetupForm() {
+    document.querySelectorAll(".provider-label").forEach(function (el) { el.textContent = providerLabel; });
+
+    var { data: providers } = await supabaseClient
+      .from("providers")
+      .select("id, display_name, specialty")
+      .eq("property", property);
+
+    var providerSelect = document.getElementById("providerSelect");
+    providerSelect.innerHTML = (providers || []).map(function (p) {
+      return '<option value="' + p.id + '">' + p.display_name + (p.specialty ? " — " + p.specialty : "") + '</option>';
+    }).join("") || '<option value="">No ' + providerLabel.toLowerCase() + 's available yet</option>';
+
+    providerSelect.addEventListener("change", function () {
+      populateServicesForProvider(providerSelect.value);
+    });
+
+    if (providers && providers.length) {
+      await populateServicesForProvider(providers[0].id);
+    } else {
+      await populateServicesForProvider(null);
+    }
+  }
+
+  // Only shows services this specific provider actually offers (via
+  // provider_services) — a customer can never book a braider for a
+  // haircut, so a provider's booking list is correct without any extra
+  // per-role filtering.
+  async function populateServicesForProvider(providerId) {
+    var serviceSelect = document.getElementById("serviceSelect");
+    if (!providerId) {
+      services = [];
+      serviceSelect.innerHTML = '<option value="">No ' + providerLabel.toLowerCase() + 's available yet</option>';
+      return;
+    }
+
+    var { data: links } = await supabaseClient
+      .from("provider_services")
+      .select("services(id, name, duration_minutes, price_cents)")
+      .eq("provider_id", providerId);
+
+    services = (links || []).map(function (l) { return l.services; }).filter(Boolean);
+
+    serviceSelect.innerHTML = services.map(function (s) {
+      return '<option value="' + s.id + '">' + s.name + ' (' + s.duration_minutes + ' min, $' + (s.price_cents / 100).toFixed(2) + ')</option>';
+    }).join("") || '<option value="">This ' + providerLabel.toLowerCase() + ' has no services set up yet</option>';
+  }
+
+  document.getElementById("bookingSetupForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var providerId = document.getElementById("providerSelect").value;
+    var serviceId = document.getElementById("serviceSelect").value;
+    var picker = document.getElementById("slotPicker");
+    if (!providerId || !serviceId) return;
+
+    var submitBtn = e.target.querySelector('button[type="submit"]');
+    var service = services.find(function (s) { return s.id === serviceId; });
+    submitBtn.disabled = true;
+    picker.innerHTML = '<p class="empty-note">Loading open times…</p>';
+
+    try {
+      var [{ data: availability }, { data: existingBookings }] = await Promise.all([
+        supabaseClient.from("availability").select("*").eq("provider_id", providerId),
+        supabaseClient.from("bookings").select("slot_start, slot_end")
+          .eq("provider_id", providerId).in("status", ["pending", "confirmed"])
+          .gte("slot_start", new Date().toISOString())
+      ]);
+
+      var slots = generateOpenSlots(availability || [], existingBookings || [], service.duration_minutes).slice(0, 12);
+      if (slots.length === 0) {
+        picker.innerHTML = '<p class="empty-note">No open times in the next two weeks for that teacher.</p>';
+        return;
+      }
+
+      picker.innerHTML = "";
+      slots.forEach(function (slot) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "slot-pick-btn";
+        btn.textContent = formatDateTime(slot.start);
+        btn.addEventListener("click", async function () {
+          btn.disabled = true;
+          btn.textContent = "Booking…";
+          var { data: newBooking, error } = await supabaseClient.from("bookings").insert({
+            service_id: serviceId,
+            provider_id: providerId,
+            student_profile_id: myProfile.id,
+            slot_start: slot.start.toISOString(),
+            slot_end: slot.end.toISOString(),
+            status: "pending"
+          }).select().single();
+          if (error) {
+            picker.innerHTML = '<p class="empty-note">' + error.message + '</p>';
+            return;
+          }
+          picker.innerHTML = '<p class="empty-note">Booked — sending you to checkout…</p>';
+          await goToCheckout(newBooking.id);
+          renderMyBookings();
+        });
+        picker.appendChild(btn);
+      });
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  // Calls the create-checkout Edge Function and redirects to Square's
+  // hosted payment page. If Square isn't configured yet (no access token
+  // set as an Edge Function secret), the booking still exists as "pending"
+  // and this just surfaces a friendly message instead of erroring out.
+  // `triggerBtn` (the Pay Now button) is disabled for the duration so a
+  // slow network + impatient double-click can't fire two checkout sessions
+  // against the same booking.
+  async function goToCheckout(bookingId, triggerBtn) {
+    if (triggerBtn) {
+      if (triggerBtn.disabled) return;
+      triggerBtn.disabled = true;
+      triggerBtn.dataset.originalText = triggerBtn.textContent;
+      triggerBtn.textContent = "Redirecting…";
+    }
+    try {
+      var { data, error } = await supabaseClient.functions.invoke("create-checkout", {
+        body: { booking_id: bookingId }
+      });
+      if (error || !data || !data.url) {
+        var msg = (data && data.error) || "Payment isn't set up yet — your booking is saved as pending.";
+        alert(msg);
+        return;
+      }
+      window.location.href = data.url;
+    } catch (err) {
+      alert("Something went wrong reaching checkout. Please try again in a moment.");
+    } finally {
+      if (triggerBtn) {
+        triggerBtn.disabled = false;
+        triggerBtn.textContent = triggerBtn.dataset.originalText;
+      }
+    }
+  }
+
+  async function renderMyBookings() {
+    var { data } = await supabaseClient
+      .from("bookings")
+      .select("*, services(name), providers(display_name), payments(status)")
+      .eq("student_profile_id", myProfile.id)
+      .gte("slot_start", new Date().toISOString())
+      .in("status", ["pending", "confirmed"])
+      .order("slot_start");
+
+    var list = document.getElementById("myBookingList");
+    if (!data || data.length === 0) {
+      list.innerHTML = '<p class="empty-note">No upcoming lessons booked yet.</p>';
+      return;
+    }
+    list.innerHTML = "";
+    data.forEach(function (b) {
+      var paymentStatus = b.payments && b.payments[0] ? b.payments[0].status : "pending";
+      var el = document.createElement("div");
+      el.className = "booking-row";
+      el.innerHTML =
+        '<span class="booking-when">' + formatDateTime(new Date(b.slot_start)) + '</span>' +
+        '<span class="booking-what">' + (b.services ? b.services.name : "Lesson") + '</span>' +
+        '<span class="booking-who">with ' + (b.providers ? b.providers.display_name : providerLabel) + '</span>' +
+        '<span class="booking-tags">' +
+          '<span class="pill pill-' + b.status + '">' + b.status + '</span>' +
+          '<span class="pill pill-' + (paymentStatus === "paid" ? "paid" : "pending") + '">' + paymentStatus + '</span>' +
+          (paymentStatus !== "paid" ? '<button class="btn btn-outline btn-sm pay-now-btn" type="button" data-id="' + b.id + '">Pay Now</button>' : '') +
+          '<button class="btn btn-outline btn-sm cancel-booking-btn" type="button" data-id="' + b.id + '" data-paid="' + (paymentStatus === "paid") + '">Cancel</button>' +
+        '</span>';
+      list.appendChild(el);
+    });
+    list.querySelectorAll(".pay-now-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () { goToCheckout(btn.dataset.id, btn); });
+    });
+    list.querySelectorAll(".cancel-booking-btn").forEach(function (btn) {
+      btn.addEventListener("click", async function () {
+        btn.disabled = true;
+        var cancelled = await cancelBooking(btn.dataset.id, btn.dataset.paid === "true");
+        if (cancelled) renderMyBookings();
+        else btn.disabled = false;
+      });
+    });
+  }
+
+  (async function init() {
+    var profile = await requireRole(["student", "admin"]);
+    if (!profile) return;
+    myProfile = profile;
+
+    document.getElementById("welcomeHeading").textContent = "Welcome back, " + profile.name;
+    document.getElementById("bookSectionHeading").textContent = property === "barbers" ? "Book a Cut" : "Book a Lesson";
+    if (property === "barbers") {
+      document.title = "My Appointments | Wisdominds Barbers & Braiders";
+      document.getElementById("backNavLink").href = "barbers.html";
+      document.getElementById("backNavLink").textContent = "Barbers & Braiders";
+    }
+
+    populateSetupForm();
+    renderMyBookings();
+  })();
+</script>
+
+<script src="assets/js/nav-toggle.js"></script>
+
+</body>
+</html>
