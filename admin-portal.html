@@ -106,27 +106,7 @@
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/booking.js"></script>
 <script>
-  (function(){
-    var root = document.documentElement;
-    var toggle = document.getElementById("themeToggle");
-    var sunIcon = '<circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"></path>';
-    var moonIcon = '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"></path>';
-    function currentTheme(){ return root.getAttribute("data-theme") || "light"; }
-    function paint(theme){
-      var svg = toggle.querySelector("svg");
-      svg.innerHTML = theme === "dark" ? sunIcon : moonIcon;
-      toggle.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
-      toggle.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
-    }
-    paint(currentTheme());
-    toggle.addEventListener("click", function(){
-      var next = currentTheme() === "dark" ? "light" : "dark";
-      root.setAttribute("data-theme", next);
-      localStorage.setItem("wisdominds-theme", next);
-      paint(next);
-    });
-  })();
-
+  
   document.getElementById("signOutBtn").addEventListener("click", signOut);
 
   var DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -305,11 +285,37 @@
 
   // ---------- detail / day modals ----------
   var overlay = document.getElementById("detailOverlay");
-  function showModal(){ overlay.hidden = false; }
-  function hideModal(){ overlay.hidden = true; }
+  var detailReturnFocus = null;
+  function detailFocusables(){
+    return Array.prototype.slice.call(overlay.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])'
+    )).filter(function(n){ return n.offsetParent !== null; });
+  }
+  function showModal(){
+    detailReturnFocus = document.activeElement;
+    overlay.hidden = false;
+    var f = detailFocusables();
+    if (f.length) f[0].focus();
+  }
+  function hideModal(){
+    overlay.hidden = true;
+    if (detailReturnFocus && detailReturnFocus.focus) detailReturnFocus.focus();
+    detailReturnFocus = null;
+  }
   document.getElementById("detailClose").addEventListener("click", hideModal);
   overlay.addEventListener("click", function(e){ if (e.target === overlay) hideModal(); });
-  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && !overlay.hidden) hideModal(); });
+  // Escape closes; Tab is trapped inside the open dialog.
+  document.addEventListener("keydown", function(e){
+    if (overlay.hidden) return;
+    if (e.key === "Escape"){ hideModal(); return; }
+    if (e.key === "Tab"){
+      var f = detailFocusables();
+      if (!f.length){ e.preventDefault(); return; }
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    }
+  });
 
   function openDay(date, list){
     document.getElementById("detailTitle").textContent =
@@ -435,6 +441,7 @@
   })();
 </script>
 
+<script src="assets/js/theme.js"></script>
 <script src="assets/js/nav-toggle.js"></script>
 
 </body>

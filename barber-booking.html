@@ -152,24 +152,7 @@
 (function(){
   "use strict";
 
-  // ---------- theme toggle ----------
-  var root = document.documentElement;
-  var themeToggle = document.getElementById("themeToggle");
-  var sunIcon = '<circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"></path>';
-  var moonIcon = '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"></path>';
-  function currentTheme(){ return root.getAttribute("data-theme") || "light"; }
-  function paintTheme(t){
-    var svg = themeToggle.querySelector("svg");
-    svg.innerHTML = t === "dark" ? sunIcon : moonIcon;
-    themeToggle.setAttribute("aria-pressed", t === "dark" ? "true" : "false");
-  }
-  paintTheme(currentTheme());
-  themeToggle.addEventListener("click", function(){
-    var next = currentTheme() === "dark" ? "light" : "dark";
-    root.setAttribute("data-theme", next);
-    localStorage.setItem("wisdominds-theme", next);
-    paintTheme(next);
-  });
+  // (Theme toggle is wired by the shared assets/js/theme.js.)
 
   // ---------- wizard state ----------
   var viewport = document.getElementById("wizardViewport");
@@ -605,6 +588,7 @@
 })();
 </script>
 
+<script src="assets/js/theme.js"></script>
 <script src="assets/js/nav-toggle.js"></script>
 
 </body>
