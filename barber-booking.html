@@ -143,9 +143,9 @@
   // Get it from the Square Developer Dashboard → your application → Credentials.
   // ============================================================
   var SQUARE_CONFIG = {
-    applicationId: "REPLACE_WITH_SQUARE_APPLICATION_ID",
+    applicationId: "REPLACE_WITH_SQUARE_PRODUCTION_APPLICATION_ID",
     locationId: "L1Q0XJ67RBW2D",
-    environment: "sandbox" // "sandbox" | "production"
+    environment: "production" // "sandbox" | "production"
   };
 </script>
 <script>
@@ -249,14 +249,20 @@
         setViewportHeight();
         return;
       }
+      // Local photos to fall back on when a service has no Square image.
+      var LOCAL_THUMBS = [
+        "assets/images/barbershop-cut.jpg",
+        "assets/images/barbershop-chair.jpg",
+        "assets/images/barbershop-interior.jpg",
+        "assets/images/barbershop-shave.avif"
+      ];
       grid.innerHTML = "";
-      services.forEach(function(svc){
+      services.forEach(function(svc, i){
         var card = document.createElement("button");
         card.type = "button";
         card.className = "service-pick";
-        var thumb = svc.imageUrl
-          ? '<div class="thumb" style="background-image:url(\'' + svc.imageUrl.replace(/'/g, "%27") + '\')"></div>'
-          : '<div class="thumb"></div>';
+        var img = svc.imageUrl || LOCAL_THUMBS[i % LOCAL_THUMBS.length];
+        var thumb = '<div class="thumb" style="background-image:url(\'' + img.replace(/'/g, "%27") + '\')"></div>';
         card.innerHTML =
           thumb +
           '<div class="body">' +
@@ -518,7 +524,8 @@
       var res = await supabaseClient.functions.invoke("barber-book", {
         body: {
           providerId: selected.barber.id,
-          variationId: selected.service.variationId,
+          variationId: selected.service.variationId || null,
+          serviceId: selected.service.serviceId || null,
           startAt: selected.slot.start.toISOString(),
           guestName: name,
           guestEmail: email,

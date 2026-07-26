@@ -88,8 +88,11 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Invalid request body" }, 400);
   }
 
-  const { providerId, variationId, startAt, guestName, guestEmail, sourceId, verificationToken } = body;
-  if (!providerId || !variationId || !startAt || !guestName || !guestEmail || !sourceId) {
+  // A service is identified either by a Square catalog variation (preferred,
+  // enables real Square appointments) or by a Supabase services row id (used
+  // when the menu came from the Supabase fallback catalog).
+  const { providerId, variationId, serviceId, startAt, guestName, guestEmail, sourceId, verificationToken } = body;
+  if (!providerId || (!variationId && !serviceId) || !startAt || !guestName || !guestEmail || !sourceId) {
     return jsonResponse({ error: "Missing required booking details." }, 400);
   }
   if (!isEmail(String(guestEmail))) {
@@ -112,27 +115,48 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Payments aren't set up yet — please call the shop to book." }, 503);
   }
 
-  // Re-price + re-name the service from Square so the amount charged can't be
-  // tampered with client-side. include_related_objects pulls the parent item
-  // (for its name) alongside the variation.
-  const catRes = await squareFetch(
-    `/v2/catalog/object/${encodeURIComponent(variationId)}?include_related_objects=true`,
-    { method: "GET" },
-  );
-  const catData = await catRes.json();
-  if (!catRes.ok || !catData.object?.item_variation_data) {
-    return jsonResponse({ error: "That service is no longer available." }, 404);
+  // Re-price + re-name the service server-side so the charged amount can't be
+  // tampered with client-side. Two sources: the Square catalog (by variation,
+  // which also lets us create a real Square appointment) or the Supabase
+  // services table (fallback catalog — charge only, no Square appointment).
+  let priceCents = 0;
+  let currency = "CAD";
+  let durationMin = 30;
+  let variationVersion: number | null = null;
+  let serviceName = "Barbershop Service";
+
+  if (variationId) {
+    const catRes = await squareFetch(
+      `/v2/catalog/object/${encodeURIComponent(variationId)}?include_related_objects=true`,
+      { method: "GET" },
+    );
+    const catData = await catRes.json();
+    if (!catRes.ok || !catData.object?.item_variation_data) {
+      return jsonResponse({ error: "That service is no longer available." }, 404);
+    }
+    const variation = catData.object;
+    const vData = variation.item_variation_data;
+    priceCents = vData.price_money?.amount ?? 0;
+    currency = vData.price_money?.currency ?? "CAD";
+    durationMin = vData.service_duration ? Math.round(vData.service_duration / 60000) : 30;
+    variationVersion = variation.version;
+    const parentItem = (catData.related_objects ?? []).find(
+      (o: any) => o.type === "ITEM" && o.id === vData.item_id,
+    );
+    serviceName = parentItem?.item_data?.name ?? "Barbershop Service";
+  } else {
+    const { data: svc, error: svcError } = await adminClient
+      .from("services")
+      .select("name, price_cents, duration_minutes, property")
+      .eq("id", serviceId)
+      .single();
+    if (svcError || !svc || svc.property !== "barbers") {
+      return jsonResponse({ error: "That service is no longer available." }, 404);
+    }
+    priceCents = svc.price_cents;
+    durationMin = svc.duration_minutes;
+    serviceName = svc.name;
   }
-  const variation = catData.object;
-  const vData = variation.item_variation_data;
-  const priceCents = vData.price_money?.amount ?? 0;
-  const currency = vData.price_money?.currency ?? "CAD";
-  const durationMin = vData.service_duration ? Math.round(vData.service_duration / 60000) : 30;
-  const variationVersion = variation.version;
-  const parentItem = (catData.related_objects ?? []).find(
-    (o: any) => o.type === "ITEM" && o.id === vData.item_id,
-  );
-  const serviceName = parentItem?.item_data?.name ?? "Barbershop Service";
 
   const startDate = new Date(startAt);
   if (isNaN(startDate.getTime())) {
@@ -148,8 +172,8 @@ Deno.serve(async (req) => {
     .insert({
       provider_id: providerId,
       student_profile_id: null,
-      service_id: null,
-      square_variation_id: variationId,
+      service_id: serviceId ?? null,
+      square_variation_id: variationId ?? null,
       service_name: serviceName,
       service_price_cents: priceCents,
       guest_name: String(guestName).trim(),
@@ -203,12 +227,15 @@ Deno.serve(async (req) => {
     { onConflict: "booking_id" },
   );
 
-  // Best-effort: put the appointment on the Square calendar. Needs a
-  // customer and (for seller-level create) an Appointments Plus/Premium
-  // subscription; if unavailable we still keep the confirmed Supabase
-  // booking + paid record, so a failure here never blocks the customer.
+  // Best-effort: put the appointment on the Square calendar. Only possible
+  // when the service came from the Square catalog (we have a variation +
+  // version); the Supabase fallback catalog has no Square variation, so we
+  // skip the calendar and keep the confirmed Supabase booking + paid record.
+  // Even with a variation this needs a customer and (for seller-level create)
+  // an Appointments Plus/Premium subscription; a failure never blocks the
+  // customer.
   let squareBookingId: string | null = null;
-  try {
+  if (variationId && variationVersion) try {
     let customerId: string | null = null;
     const custSearch = await squareFetch("/v2/customers/search", {
       method: "POST",
