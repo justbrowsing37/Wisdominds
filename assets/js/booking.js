@@ -74,3 +74,20 @@ function generateOpenSlots(availabilityRows, existingBookings, serviceDurationMi
   slots.sort(function (a, b) { return a.start - b.start; });
   return slots;
 }
+
+// Buckets the flat slot list from generateOpenSlots into per-day groups so a
+// booking UI can show a row of dates and then times within the chosen date.
+// Returns [{ key, date, slots }] in chronological order.
+function groupSlotsByDay(slots) {
+  const groups = [];
+  const byKey = {};
+  slots.forEach(function (slot) {
+    const key = slot.start.toDateString();
+    if (!byKey[key]) {
+      byKey[key] = { key: key, date: slot.start, slots: [] };
+      groups.push(byKey[key]);
+    }
+    byKey[key].slots.push(slot);
+  });
+  return groups;
+}

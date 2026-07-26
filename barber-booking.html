@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book an Appointment | Wisdominds Barbers &amp; Braiders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+<script>
+  (function(){
+    var saved = localStorage.getItem("wisdominds-theme");
+    if(saved){ document.documentElement.setAttribute("data-theme", saved); }
+  })();
+</script>
+</head>
+<body>
+
+<header class="site">
+  <div class="header-row wrap">
+    <a class="mark" href="barbers.html"><span class="mark-dot" aria-hidden="true"></span> Wisdominds Barbers &amp; Braiders</a>
+    <nav class="nav-links">
+      <a href="barbers.html">← Back to shop</a>
+    </nav>
+    <div class="header-actions">
+      <button class="nav-toggle" id="navToggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      </button>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+        <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4.2"></circle>
+          <path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap wizard-main">
+
+  <div class="wizard-progress" id="wizardProgress">
+    <div class="step is-active" data-step="1"><span class="num">1</span><span class="label">Service</span></div>
+    <span class="sep" aria-hidden="true"></span>
+    <div class="step" data-step="2"><span class="num">2</span><span class="label">Barber &amp; Time</span></div>
+    <span class="sep" aria-hidden="true"></span>
+    <div class="step" data-step="3"><span class="num">3</span><span class="label">Payment</span></div>
+  </div>
+
+  <div class="wizard-viewport" id="wizardViewport">
+    <div class="wizard-fade" id="wizardFade" aria-hidden="true"></div>
+    <div class="wizard-track" id="wizardTrack">
+
+      <!-- Step 1: choose a service -->
+      <section class="wizard-step" data-step="1" aria-label="Choose a service">
+        <h2>Choose your service</h2>
+        <p class="step-sub">Pick what you're coming in for. Prices are live from the shop.</p>
+        <div class="service-select-grid" id="serviceGrid">
+          <p class="empty-note center" id="serviceLoading">Loading services…</p>
+        </div>
+      </section>
+
+      <!-- Step 2: choose barber + date + time -->
+      <section class="wizard-step" data-step="2" aria-label="Choose barber and time">
+        <button class="wizard-back" type="button" data-back-to="1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>
+          Change service
+        </button>
+        <h2>Choose your barber &amp; time</h2>
+        <p class="step-sub" id="step2Sub">Pick a barber, then an open slot.</p>
+
+        <p class="slot-block-label">Barber</p>
+        <div class="barber-options" id="barberOptions">
+          <p class="empty-note">Loading barbers…</p>
+        </div>
+
+        <div id="slotArea" hidden>
+          <p class="slot-block-label">Date</p>
+          <div class="date-pills" id="datePills"></div>
+          <p class="slot-block-label">Time</p>
+          <div class="time-grid" id="timeGrid"></div>
+        </div>
+      </section>
+
+      <!-- Step 3: details + payment -->
+      <section class="wizard-step" data-step="3" aria-label="Details and payment">
+        <button class="wizard-back" type="button" data-back-to="2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>
+          Change time
+        </button>
+        <h2>Your details &amp; payment</h2>
+        <p class="step-sub">Secure card payment — you'll get an email confirmation once it's done.</p>
+
+        <div class="pay-layout">
+          <div class="card pay-summary" id="paySummary"></div>
+
+          <form class="pay-form" id="payForm" novalidate>
+            <div class="pay-message" id="payMessage"></div>
+            <label>Full name
+              <input type="text" id="payName" autocomplete="name" required>
+            </label>
+            <label>Email
+              <input type="email" id="payEmail" autocomplete="email" required>
+            </label>
+            <p class="card-field-label">Card details</p>
+            <div id="card-container"></div>
+            <button class="btn btn-gold pay-btn" type="submit" id="payBtn">Pay &amp; Confirm</button>
+            <p class="pay-note">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              Payments are processed securely by Square. We never see your card number.
+            </p>
+          </form>
+        </div>
+      </section>
+
+      <!-- Step 4: confirmation -->
+      <section class="wizard-step" data-step="4" aria-label="Booking confirmed">
+        <div class="confirm-wrap">
+          <div class="confirm-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+          </div>
+          <h2>You're booked in</h2>
+          <p class="step-sub" id="confirmSub" style="margin-bottom:0;"></p>
+          <div class="card confirm-card" id="confirmCard"></div>
+          <a class="btn btn-outline" href="barbers.html">Back to the shop</a>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/booking.js"></script>
+<script>
+  // ============================================================
+  // Square Web Payments SDK configuration.
+  // applicationId + environment MUST match the SQUARE_ACCESS_TOKEN
+  // deployed on the `barber-book` Edge Function.
+  //   - Sandbox app id looks like "sandbox-sq0idb-..."
+  //   - Production app id looks like "sq0idp-..."
+  // Get it from the Square Developer Dashboard → your application → Credentials.
+  // ============================================================
+  var SQUARE_CONFIG = {
+    applicationId: "REPLACE_WITH_SQUARE_APPLICATION_ID",
+    locationId: "L1Q0XJ67RBW2D",
+    environment: "sandbox" // "sandbox" | "production"
+  };
+</script>
+<script>
+(function(){
+  "use strict";
+
+  // ---------- theme toggle ----------
+  var root = document.documentElement;
+  var themeToggle = document.getElementById("themeToggle");
+  var sunIcon = '<circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"></path>';
+  var moonIcon = '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"></path>';
+  function currentTheme(){ return root.getAttribute("data-theme") || "light"; }
+  function paintTheme(t){
+    var svg = themeToggle.querySelector("svg");
+    svg.innerHTML = t === "dark" ? sunIcon : moonIcon;
+    themeToggle.setAttribute("aria-pressed", t === "dark" ? "true" : "false");
+  }
+  paintTheme(currentTheme());
+  themeToggle.addEventListener("click", function(){
+    var next = currentTheme() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    localStorage.setItem("wisdominds-theme", next);
+    paintTheme(next);
+  });
+
+  // ---------- wizard state ----------
+  var viewport = document.getElementById("wizardViewport");
+  var track = document.getElementById("wizardTrack");
+  var fade = document.getElementById("wizardFade");
+  var steps = Array.prototype.slice.call(track.querySelectorAll(".wizard-step"));
+  var progressSteps = Array.prototype.slice.call(document.querySelectorAll("#wizardProgress .step"));
+  var currentStep = 1;
+
+  var selected = { service: null, barber: null, slot: null };
+  var barbersCache = null;
+
+  function fmtPrice(cents){ return "$" + (cents / 100).toFixed(2); }
+  function fmtDuration(min){
+    if (min < 60) return min + " min";
+    var h = Math.floor(min / 60), m = min % 60;
+    return h + " hr" + (h > 1 ? "s" : "") + (m ? " " + m + " min" : "");
+  }
+  function fmtWhen(date){
+    return date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) +
+      " at " + date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  }
+
+  function setViewportHeight(){
+    var active = steps[currentStep - 1];
+    if (active) viewport.style.height = active.offsetHeight + "px";
+  }
+  window.addEventListener("resize", setViewportHeight);
+
+  function updateProgress(){
+    progressSteps.forEach(function(el){
+      var n = Number(el.getAttribute("data-step"));
+      el.classList.toggle("is-active", n === currentStep);
+      el.classList.toggle("is-done", n < currentStep);
+    });
+  }
+
+  // mode: "slide" (visible left-swipe) or "fade" (crossfade through the
+  // page background, per the requested white fade into payment).
+  function goToStep(n, mode){
+    mode = mode || "slide";
+    function move(){
+      currentStep = n;
+      track.style.transform = "translateX(-" + ((n - 1) * 25) + "%)";
+      updateProgress();
+      // Let the transform/layout settle, then size the viewport to the step.
+      window.requestAnimationFrame(setViewportHeight);
+      setTimeout(setViewportHeight, 60);
+    }
+    if (mode === "fade"){
+      fade.classList.add("is-on");
+      setTimeout(function(){
+        move();
+        setTimeout(function(){ fade.classList.remove("is-on"); }, 80);
+      }, 280);
+    } else {
+      move();
+    }
+  }
+
+  // Back buttons
+  document.querySelectorAll("[data-back-to]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      goToStep(Number(btn.getAttribute("data-back-to")), "slide");
+    });
+  });
+
+  // ---------- Step 1: services (live from Square via Edge Function) ----------
+  async function loadServices(){
+    var grid = document.getElementById("serviceGrid");
+    try {
+      var res = await supabaseClient.functions.invoke("barber-services");
+      var data = res.data, error = res.error;
+      var services = data && data.services;
+      if (error || !services || !services.length){
+        grid.innerHTML = '<p class="empty-note center">Online booking isn\'t available right now — please call <a href="tel:+14168448287">(416) 844-8287</a>.</p>';
+        setViewportHeight();
+        return;
+      }
+      grid.innerHTML = "";
+      services.forEach(function(svc){
+        var card = document.createElement("button");
+        card.type = "button";
+        card.className = "service-pick";
+        var thumb = svc.imageUrl
+          ? '<div class="thumb" style="background-image:url(\'' + svc.imageUrl.replace(/'/g, "%27") + '\')"></div>'
+          : '<div class="thumb"></div>';
+        card.innerHTML =
+          thumb +
+          '<div class="body">' +
+            '<h4>' + svc.name + '</h4>' +
+            (svc.description ? '<p class="desc">' + svc.description + '</p>' : '') +
+            '<div class="meta"><span class="price">' + fmtPrice(svc.priceCents) + '</span>' +
+            '<span class="dur">' + fmtDuration(svc.durationMin) + '</span></div>' +
+          '</div>';
+        card.addEventListener("click", function(){ chooseService(svc); });
+        grid.appendChild(card);
+      });
+      setViewportHeight();
+    } catch (e){
+      grid.innerHTML = '<p class="empty-note center">Couldn\'t load services. Please refresh, or call <a href="tel:+14168448287">(416) 844-8287</a>.</p>';
+      setViewportHeight();
+    }
+  }
+
+  function chooseService(svc){
+    selected.service = svc;
+    selected.slot = null;
+    document.getElementById("step2Sub").textContent =
+      svc.name + " · " + fmtDuration(svc.durationMin) + " · " + fmtPrice(svc.priceCents);
+    // Reset any prior slot picking so durations re-compute for this service.
+    document.getElementById("slotArea").hidden = true;
+    document.getElementById("timeGrid").innerHTML = "";
+    document.getElementById("datePills").innerHTML = "";
+    loadBarbers();
+    goToStep(2, "slide");
+  }
+
+  // ---------- Step 2: barbers + availability ----------
+  async function loadBarbers(){
+    var wrap = document.getElementById("barberOptions");
+    if (barbersCache){ renderBarbers(barbersCache); return; }
+    var res = await supabaseClient
+      .from("providers")
+      .select("id, display_name, specialty")
+      .eq("property", "barbers");
+    var barbers = res.data || [];
+    barbersCache = barbers;
+    renderBarbers(barbers);
+  }
+
+  function initials(name){
+    return name.split(/\s+/).map(function(w){ return w[0]; }).join("").slice(0,2).toUpperCase();
+  }
+
+  function renderBarbers(barbers){
+    var wrap = document.getElementById("barberOptions");
+    if (!barbers.length){
+      wrap.innerHTML = '<p class="empty-note">No barbers are set up for online booking yet — please call <a href="tel:+14168448287">(416) 844-8287</a>.</p>';
+      setViewportHeight();
+      return;
+    }
+    wrap.innerHTML = "";
+    barbers.forEach(function(b){
+      var el = document.createElement("button");
+      el.type = "button";
+      el.className = "barber-pick";
+      el.innerHTML =
+        '<span class="avatar">' + initials(b.display_name) + '</span>' +
+        '<h4>' + b.display_name + '</h4>' +
+        '<p class="role">' + (b.specialty || "Barber") + '</p>';
+      el.addEventListener("click", function(){
+        wrap.querySelectorAll(".barber-pick").forEach(function(x){ x.classList.remove("is-selected"); });
+        el.classList.add("is-selected");
+        selected.barber = b;
+        loadSlots(b);
+      });
+      wrap.appendChild(el);
+    });
+    setViewportHeight();
+  }
+
+  async function loadSlots(barber){
+    var slotArea = document.getElementById("slotArea");
+    var datePills = document.getElementById("datePills");
+    var timeGrid = document.getElementById("timeGrid");
+    slotArea.hidden = false;
+    datePills.innerHTML = '<p class="empty-note">Finding open times…</p>';
+    timeGrid.innerHTML = "";
+    setViewportHeight();
+
+    var from = new Date();
+    var to = new Date(from.getTime() + 21 * 24 * 60 * 60 * 1000);
+
+    var availRes = await supabaseClient.from("availability").select("*").eq("provider_id", barber.id);
+    var busyRes = await supabaseClient.rpc("provider_busy_slots", {
+      p_provider: barber.id,
+      p_from: from.toISOString(),
+      p_to: to.toISOString()
+    });
+
+    var availability = availRes.data || [];
+    var busy = busyRes.data || [];
+
+    var slots = generateOpenSlots(availability, busy, selected.service.durationMin, 21);
+    var days = groupSlotsByDay(slots).slice(0, 14);
+
+    if (!days.length){
+      datePills.innerHTML = '<p class="empty-note">No open times in the next couple of weeks. Try another barber or call the shop.</p>';
+      setViewportHeight();
+      return;
+    }
+
+    datePills.innerHTML = "";
+    days.forEach(function(day, i){
+      var pill = document.createElement("button");
+      pill.type = "button";
+      pill.className = "date-pill" + (i === 0 ? " is-selected" : "");
+      pill.innerHTML =
+        '<span class="dp-dow">' + day.date.toLocaleDateString(undefined, { weekday: "short" }) + '</span>' +
+        '<span class="dp-day">' + day.date.getDate() + '</span>' +
+        '<span class="dp-mon">' + day.date.toLocaleDateString(undefined, { month: "short" }) + '</span>';
+      pill.addEventListener("click", function(){
+        datePills.querySelectorAll(".date-pill").forEach(function(x){ x.classList.remove("is-selected"); });
+        pill.classList.add("is-selected");
+        renderTimes(day.slots);
+      });
+      datePills.appendChild(pill);
+    });
+    renderTimes(days[0].slots);
+  }
+
+  function renderTimes(slots){
+    var timeGrid = document.getElementById("timeGrid");
+    timeGrid.innerHTML = "";
+    slots.forEach(function(slot){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "time-btn";
+      btn.textContent = slot.start.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+      btn.addEventListener("click", function(){
+        selected.slot = slot;
+        goToPayment();
+      });
+      timeGrid.appendChild(btn);
+    });
+    setViewportHeight();
+  }
+
+  // ---------- Step 3: payment ----------
+  function renderPaySummary(){
+    var s = selected.service, b = selected.barber, slot = selected.slot;
+    document.getElementById("paySummary").innerHTML =
+      '<h3>Booking summary</h3>' +
+      '<div class="pay-summary-row"><span class="k">Service</span><span class="v">' + s.name + '</span></div>' +
+      '<div class="pay-summary-row"><span class="k">Barber</span><span class="v">' + b.display_name + '</span></div>' +
+      '<div class="pay-summary-row"><span class="k">When</span><span class="v">' + fmtWhen(slot.start) + '</span></div>' +
+      '<div class="pay-summary-row"><span class="k">Duration</span><span class="v">' + fmtDuration(s.durationMin) + '</span></div>' +
+      '<div class="pay-summary-total"><span class="k">Total</span><span class="v">' + fmtPrice(s.priceCents) + '</span></div>';
+  }
+
+  function goToPayment(){
+    renderPaySummary();
+    goToStep(3, "fade");
+    initSquare();
+  }
+
+  // ---------- Square Web Payments SDK ----------
+  var squarePayments = null;
+  var squareCard = null;
+  var squareReady = false;
+
+  function loadSquareSdk(){
+    return new Promise(function(resolve, reject){
+      if (window.Square){ resolve(); return; }
+      var src = SQUARE_CONFIG.environment === "production"
+        ? "https://web.squarecdn.com/v1/square.js"
+        : "https://sandbox.web.squarecdn.com/v1/square.js";
+      var s = document.createElement("script");
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = function(){ reject(new Error("Square SDK failed to load")); };
+      document.head.appendChild(s);
+    });
+  }
+
+  async function initSquare(){
+    if (squareReady) return;
+    var payMsg = document.getElementById("payMessage");
+    var payBtn = document.getElementById("payBtn");
+
+    if (!SQUARE_CONFIG.applicationId || SQUARE_CONFIG.applicationId.indexOf("REPLACE_WITH") === 0){
+      payMsg.className = "pay-message is-visible is-info";
+      payMsg.textContent = "Card payments aren't switched on yet. Add your Square Application ID to finish setup.";
+      payBtn.disabled = true;
+      setViewportHeight();
+      return;
+    }
+
+    try {
+      await loadSquareSdk();
+      squarePayments = window.Square.payments(SQUARE_CONFIG.applicationId, SQUARE_CONFIG.locationId);
+      squareCard = await squarePayments.card();
+      await squareCard.attach("#card-container");
+      squareReady = true;
+      setViewportHeight();
+    } catch (e){
+      payMsg.className = "pay-message is-visible is-error";
+      payMsg.textContent = "Couldn't start the card form. Please refresh and try again.";
+      payBtn.disabled = true;
+      setViewportHeight();
+    }
+  }
+
+  document.getElementById("payForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    var payMsg = document.getElementById("payMessage");
+    var payBtn = document.getElementById("payBtn");
+    var name = document.getElementById("payName").value.trim();
+    var email = document.getElementById("payEmail").value.trim();
+
+    payMsg.className = "pay-message";
+    if (!name || !email){
+      payMsg.className = "pay-message is-visible is-error";
+      payMsg.textContent = "Please enter your name and email.";
+      setViewportHeight();
+      return;
+    }
+    if (!squareReady || !squareCard){
+      payMsg.className = "pay-message is-visible is-error";
+      payMsg.textContent = "The card form isn't ready yet.";
+      setViewportHeight();
+      return;
+    }
+
+    payBtn.disabled = true;
+    payBtn.textContent = "Processing…";
+
+    try {
+      var tokenResult = await squareCard.tokenize();
+      if (tokenResult.status !== "OK"){
+        throw new Error((tokenResult.errors && tokenResult.errors[0] && tokenResult.errors[0].message) || "Please check your card details.");
+      }
+      var sourceId = tokenResult.token;
+
+      // 3-D Secure / SCA verification — best effort; proceed without it if
+      // the SDK can't verify (e.g. cards that don't require it).
+      var verificationToken = null;
+      try {
+        var nameParts = name.split(/\s+/);
+        var vr = await squarePayments.verifyBuyer(sourceId, {
+          amount: (selected.service.priceCents / 100).toFixed(2),
+          currencyCode: selected.service.currency || "CAD",
+          intent: "CHARGE",
+          customerInitiated: true,
+          sellerKeyedIn: false,
+          billingContact: {
+            givenName: nameParts[0] || name,
+            familyName: nameParts.slice(1).join(" ") || undefined,
+            email: email
+          }
+        });
+        verificationToken = vr && vr.token;
+      } catch (ve){ /* optional */ }
+
+      var res = await supabaseClient.functions.invoke("barber-book", {
+        body: {
+          providerId: selected.barber.id,
+          variationId: selected.service.variationId,
+          startAt: selected.slot.start.toISOString(),
+          guestName: name,
+          guestEmail: email,
+          sourceId: sourceId,
+          verificationToken: verificationToken
+        }
+      });
+
+      var data = res.data, error = res.error;
+      // functions.invoke surfaces non-2xx as error; the JSON body still
+      // carries our friendly message on data when the function returned it.
+      var friendly = (data && data.error) ||
+        (error && error.context && await safeErrText(error)) || null;
+
+      if (error || !data || !data.ok){
+        throw new Error(friendly || "Payment couldn't be completed. Please try again.");
+      }
+
+      renderConfirmation(data.booking);
+      goToStep(4, "fade");
+    } catch (err){
+      payMsg.className = "pay-message is-visible is-error";
+      payMsg.textContent = err.message || "Something went wrong. Please try again.";
+      payBtn.disabled = false;
+      payBtn.textContent = "Pay & Confirm";
+      setViewportHeight();
+    }
+  });
+
+  // functions.invoke wraps non-2xx responses; try to read the JSON error body.
+  async function safeErrText(error){
+    try {
+      var body = await error.context.json();
+      return body && body.error;
+    } catch (e){ return null; }
+  }
+
+  // ---------- Step 4: confirmation ----------
+  function renderConfirmation(booking){
+    var when = fmtWhen(new Date(booking.startAt));
+    document.getElementById("confirmSub").textContent =
+      booking.emailSent
+        ? "A confirmation email is on its way to you."
+        : "Save these details — we'll see you soon.";
+    document.getElementById("confirmCard").innerHTML =
+      '<div class="pay-summary-row"><span class="k">Service</span><span class="v">' + booking.serviceName + '</span></div>' +
+      '<div class="pay-summary-row"><span class="k">Barber</span><span class="v">' + booking.providerName + '</span></div>' +
+      '<div class="pay-summary-row"><span class="k">When</span><span class="v">' + when + '</span></div>' +
+      '<div class="pay-summary-total"><span class="k">Paid</span><span class="v">' + fmtPrice(booking.priceCents) + '</span></div>';
+    setViewportHeight();
+  }
+
+  // ---------- go ----------
+  loadServices();
+  setViewportHeight();
+})();
+</script>
+
+<script src="assets/js/nav-toggle.js"></script>
+
+</body>
+</html>
