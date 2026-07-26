@@ -1,5 +1,17 @@
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+// Escape user-controlled strings before they go into innerHTML or into
+// double-quoted attribute values built by concatenation. Names, display
+// names, and specialties are set by self-registered users / providers, so
+// any value that reaches the DOM as markup must pass through here. Escapes
+// the five HTML-significant characters (incl. both quote styles), which is
+// safe for text nodes and for value="..." attributes alike.
+function escapeHtml(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
 // Shared by all three portals — a student cancelling their own booking, a
 // provider cancelling one of theirs, an admin cancelling any. RLS decides
 // who's actually allowed; this just flips the status. Cancelled bookings

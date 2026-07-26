@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
 
   const { data: booking, error: bookingError } = await adminClient
     .from("bookings")
-    .select("id, student_profile_id, services(name, price_cents), providers(display_name)")
+    .select("id, status, slot_start, student_profile_id, services(name, price_cents), providers(display_name)")
     .eq("id", bookingId)
     .single();
   if (bookingError || !booking) {
@@ -88,6 +88,14 @@ Deno.serve(async (req) => {
   }
   if (booking.student_profile_id !== profile.id) {
     return jsonResponse({ error: "This booking doesn't belong to you" }, 403);
+  }
+  // Don't mint a payment link for a slot that's cancelled/completed or in the
+  // past — a stale portal tab could otherwise let someone pay for a dead slot.
+  if (booking.status === "cancelled" || booking.status === "completed") {
+    return jsonResponse({ error: "This booking can no longer be paid for." }, 409);
+  }
+  if (new Date(booking.slot_start).getTime() < Date.now()) {
+    return jsonResponse({ error: "This booking time has already passed." }, 409);
   }
 
   // Re-invoking checkout for a booking that's already paid would upsert the

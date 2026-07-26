@@ -198,7 +198,7 @@
   </div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8/dist/umd/supabase.js" integrity="sha384-M65KxMm/JqBppck6onbmAgPVMBHrmPCf1L17Q+71EcvI9/VVI8j5cqoxQf6lj6h2" crossorigin="anonymous"></script>
 <script src="assets/js/supabase-client.js"></script>
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/booking.js"></script>
@@ -206,7 +206,8 @@
   
   document.getElementById("signOutBtn").addEventListener("click", signOut);
 
-  function escapeAttr(s){ return String(s == null ? "" : s).replace(/"/g, "&quot;"); }
+  // Full HTML escaping (from booking.js) — safe for double-quoted attributes too.
+  function escapeAttr(s){ return escapeHtml(s); }
 
   // ---------- modals (with focus management) ----------
   var modalReturnFocus = null;
@@ -346,9 +347,9 @@
       var row = document.createElement("div");
       row.className = "booking-row";
       row.innerHTML =
-        '<span class="booking-when">' + p.name + '</span>' +
+        '<span class="booking-when">' + escapeHtml(p.name) + '</span>' +
         '<span class="booking-what"><span class="pill pill-' + (p.role === "teacher" ? "confirmed" : "pending") + '">' + p.role + '</span></span>' +
-        '<span class="booking-who">' + p.property + (provider ? ' &middot; ' + provider.display_name : '') + '</span>' +
+        '<span class="booking-who">' + p.property + (provider ? ' &middot; ' + escapeHtml(provider.display_name) : '') + '</span>' +
         '<span class="booking-tags">' +
           '<button class="btn btn-sm btn-outline edit-member-btn" type="button">Edit</button>' +
           '<button class="btn btn-sm btn-outline delete-member-btn" type="button">Delete</button>' +
@@ -453,7 +454,7 @@
       var el = document.createElement("div");
       el.className = "slot-row"; el.dataset.serviceId = s.id;
       el.innerHTML =
-        '<span class="slot-day">' + s.name + ' &middot; ' + s.property + '</span>' +
+        '<span class="slot-day">' + escapeHtml(s.name) + ' &middot; ' + s.property + '</span>' +
         '<span class="slot-time">' + s.duration_minutes + ' min &middot; $' + (s.price_cents / 100).toFixed(2) + '</span>' +
         '<button class="slot-edit-btn" type="button" aria-label="Edit service" data-id="' + s.id + '">&#9998;</button>' +
         '<button class="slot-remove" type="button" aria-label="Delete service" data-id="' + s.id + '">✕</button>';
@@ -517,7 +518,7 @@
     var sel = document.getElementById("availProvider");
     var prev = sel.value;
     sel.innerHTML = '<option value="">Select a provider…</option>' + availProviders.map(function(p){
-      return '<option value="' + p.id + '">' + p.display_name + ' (' + p.property + ')</option>';
+      return '<option value="' + p.id + '">' + escapeHtml(p.display_name) + ' (' + p.property + ')</option>';
     }).join("");
     sel.value = prev;
   }

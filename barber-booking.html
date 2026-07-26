@@ -130,7 +130,7 @@
   </div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.8/dist/umd/supabase.js" integrity="sha384-M65KxMm/JqBppck6onbmAgPVMBHrmPCf1L17Q+71EcvI9/VVI8j5cqoxQf6lj6h2" crossorigin="anonymous"></script>
 <script src="assets/js/supabase-client.js"></script>
 <script src="assets/js/booking.js"></script>
 <script>
@@ -249,8 +249,8 @@
         card.innerHTML =
           thumb +
           '<div class="body">' +
-            '<h4>' + svc.name + '</h4>' +
-            (svc.description ? '<p class="desc">' + svc.description + '</p>' : '') +
+            '<h4>' + escapeHtml(svc.name) + '</h4>' +
+            (svc.description ? '<p class="desc">' + escapeHtml(svc.description) + '</p>' : '') +
             '<div class="meta"><span class="price">' + fmtPrice(svc.priceCents) + '</span>' +
             '<span class="dur">' + fmtDuration(svc.durationMin) + '</span></div>' +
           '</div>';
@@ -328,9 +328,9 @@
       el.type = "button";
       el.className = "barber-pick";
       el.innerHTML =
-        '<span class="avatar">' + initials(b.display_name) + '</span>' +
-        '<h4>' + b.display_name + '</h4>' +
-        '<p class="role">' + (b.specialty || "Barber") + '</p>';
+        '<span class="avatar">' + escapeHtml(initials(b.display_name)) + '</span>' +
+        '<h4>' + escapeHtml(b.display_name) + '</h4>' +
+        '<p class="role">' + escapeHtml(b.specialty || "Barber") + '</p>';
       el.addEventListener("click", function(){
         wrap.querySelectorAll(".barber-pick").forEach(function(x){ x.classList.remove("is-selected"); });
         el.classList.add("is-selected");
@@ -414,8 +414,8 @@
     var s = selected.service, b = selected.barber, slot = selected.slot;
     document.getElementById("paySummary").innerHTML =
       '<h3>Booking summary</h3>' +
-      '<div class="pay-summary-row"><span class="k">Service</span><span class="v">' + s.name + '</span></div>' +
-      '<div class="pay-summary-row"><span class="k">Barber</span><span class="v">' + b.display_name + '</span></div>' +
+      '<div class="pay-summary-row"><span class="k">Service</span><span class="v">' + escapeHtml(s.name) + '</span></div>' +
+      '<div class="pay-summary-row"><span class="k">Barber</span><span class="v">' + escapeHtml(b.display_name) + '</span></div>' +
       '<div class="pay-summary-row"><span class="k">When</span><span class="v">' + fmtWhen(slot.start) + '</span></div>' +
       '<div class="pay-summary-row"><span class="k">Duration</span><span class="v">' + fmtDuration(s.durationMin) + '</span></div>' +
       '<div class="pay-summary-total"><span class="k">Total</span><span class="v">' + fmtPrice(s.priceCents) + '</span></div>';
@@ -575,8 +575,8 @@
         ? "A confirmation email is on its way to you."
         : "Save these details — we'll see you soon.";
     document.getElementById("confirmCard").innerHTML =
-      '<div class="pay-summary-row"><span class="k">Service</span><span class="v">' + booking.serviceName + '</span></div>' +
-      '<div class="pay-summary-row"><span class="k">Barber</span><span class="v">' + booking.providerName + '</span></div>' +
+      '<div class="pay-summary-row"><span class="k">Service</span><span class="v">' + escapeHtml(booking.serviceName) + '</span></div>' +
+      '<div class="pay-summary-row"><span class="k">Barber</span><span class="v">' + escapeHtml(booking.providerName) + '</span></div>' +
       '<div class="pay-summary-row"><span class="k">When</span><span class="v">' + when + '</span></div>' +
       '<div class="pay-summary-total"><span class="k">Paid</span><span class="v">' + fmtPrice(booking.priceCents) + '</span></div>';
     setViewportHeight();

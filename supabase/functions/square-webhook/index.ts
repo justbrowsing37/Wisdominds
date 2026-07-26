@@ -27,7 +27,19 @@ async function verifySignature(rawBody: string, signatureHeader: string | null):
     new TextEncoder().encode(NOTIFICATION_URL + rawBody)
   );
   const computed = btoa(String.fromCharCode(...new Uint8Array(signatureBytes)));
-  return computed === signatureHeader;
+  return timingSafeEqual(computed, signatureHeader);
+}
+
+// Constant-time string comparison so the signature check can't be probed via
+// early-exit timing. (Length is allowed to differ fast — the HMAC is a
+// fixed-length base64 string, so that leaks nothing useful.)
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
 }
 
 Deno.serve(async (req) => {
