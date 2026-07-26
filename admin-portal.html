@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin Portal | Wisdominds Cooperative</title>
+<title>Bookings Calendar | Wisdominds Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
 
 <header class="site">
   <div class="header-row wrap">
-    <a class="mark" href="index.html"><span class="mark-dot" aria-hidden="true"></span> Wisdominds Cooperative</a>
+    <a class="mark" href="index.html"><span class="mark-dot" aria-hidden="true"></span> Wisdominds Admin</a>
     <nav class="nav-links">
       <a href="barbers.html">Barbers</a>
       <a href="music.html">Music</a>
@@ -40,174 +40,66 @@
 </header>
 
 <main class="wrap portal-main">
-  <div class="portal-welcome">
-    <h1 id="welcomeHeading">Welcome back</h1>
-    <p>Manage team accounts, the service catalog, and bookings across every Wisdominds property.</p>
+  <div class="admin-topbar">
+    <div>
+      <h1 id="welcomeHeading">Bookings</h1>
+      <p>Every appointment across the shop, on one calendar.</p>
+    </div>
+    <nav class="admin-tabs">
+      <a href="admin-portal.html" class="is-active">Calendar</a>
+      <a href="admin-manage.html">Manage</a>
+    </nav>
   </div>
 
-  <div class="portal-grid">
-    <section class="card portal-section">
-      <div class="portal-section-head">
-        <h2>Team &amp; Accounts</h2>
-        <button class="btn btn-gold btn-sm" type="button" id="openAddMemberModal">+ Add Team Member</button>
+  <section class="card portal-section full">
+    <div class="cal-toolbar">
+      <div class="cal-nav">
+        <button type="button" id="calPrev" aria-label="Previous">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+        </button>
+        <button type="button" class="cal-today" id="calToday">Today</button>
+        <button type="button" id="calNext" aria-label="Next">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+        </button>
+        <span class="cal-title" id="calTitle">—</span>
       </div>
-      <div class="filter-row">
-        <label>Search
-          <input type="search" id="teamSearch" placeholder="Name…">
-        </label>
-        <label>Role
-          <select id="teamRoleFilter">
-            <option value="">All Roles</option>
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-            <option value="admin">Admin</option>
-          </select>
-        </label>
-        <label>Property
-          <select id="teamPropertyFilter">
-            <option value="">All Properties</option>
-            <option value="music">Music</option>
-            <option value="barbers">Barbers</option>
-            <option value="coop">Coop</option>
-          </select>
-        </label>
-        <label>Sort
-          <select id="teamSort">
-            <option value="name">Name (A&ndash;Z)</option>
-            <option value="role">Role</option>
-            <option value="property">Property</option>
-          </select>
-        </label>
-      </div>
-      <div class="booking-list" id="teamList">
-        <p class="empty-note">Loading team…</p>
-      </div>
-    </section>
-
-    <section class="card portal-section">
-      <div class="portal-section-head">
-        <h2>Service Catalog</h2>
-        <button class="btn btn-gold btn-sm" type="button" id="openAddServiceModal">+ Add Service</button>
-      </div>
-      <div class="filter-row">
-        <label>Property
-          <select id="servicePropertyFilter">
-            <option value="">All Properties</option>
-            <option value="music">Music</option>
-            <option value="barbers">Barbers</option>
-            <option value="coop">Coop</option>
-          </select>
-        </label>
-        <label>Sort
-          <select id="serviceSort">
-            <option value="name">Name (A&ndash;Z)</option>
-            <option value="price_asc">Price (Low&ndash;High)</option>
-            <option value="price_desc">Price (High&ndash;Low)</option>
-            <option value="duration">Duration</option>
-          </select>
-        </label>
-      </div>
-      <div class="slot-list" id="serviceList">
-        <p class="empty-note">Loading services…</p>
-      </div>
-    </section>
-  </div>
-
-  <div class="modal-overlay" id="addMemberModalOverlay" hidden>
-    <div class="modal card" role="dialog" aria-modal="true" aria-labelledby="addMemberModalTitle">
-      <div class="modal-head">
-        <h3 id="addMemberModalTitle">Add Team Member</h3>
-        <button class="modal-close" type="button" id="closeAddMemberModal" aria-label="Close">✕</button>
-      </div>
-      <div class="auth-message" id="addMemberMessage"></div>
-      <form class="booking-form" id="addMemberForm">
-        <label>Full Name
-          <input type="text" name="name" required>
-        </label>
-        <label>Email
-          <input type="email" name="email" required>
-        </label>
-        <label>Temporary Password
-          <input type="text" name="temp_password" minlength="8" required>
-        </label>
-        <label>Role
-          <select name="role" id="newMemberRole" required>
-            <option value="teacher">Teacher / Provider</option>
-            <option value="student">Student</option>
-          </select>
-        </label>
-        <label>Property
-          <select name="property" id="newMemberProperty" required>
-            <option value="music">Music</option>
-            <option value="barbers">Barbers</option>
-          </select>
-        </label>
-        <div id="newMemberProviderFields">
-          <label>Public Display Name
-            <input type="text" name="display_name">
-          </label>
-          <label>Specialty
-            <input type="text" name="specialty">
-          </label>
-          <label>Bio
-            <textarea name="bio" rows="2"></textarea>
-          </label>
-          <p class="section-label">Services Offered</p>
-          <div id="newMemberServiceChecks"></div>
+      <div class="cal-controls">
+        <select class="cal-filter" id="propertyFilter">
+          <option value="">All properties</option>
+          <option value="barbers">Barbers</option>
+          <option value="music">Music</option>
+        </select>
+        <select class="cal-filter" id="barberFilter">
+          <option value="">All providers</option>
+        </select>
+        <div class="cal-views">
+          <button type="button" data-view="month" class="is-active">Month</button>
+          <button type="button" data-view="agenda">Agenda</button>
         </div>
-        <button class="btn btn-gold" type="submit">Add Team Member</button>
-        <p class="form-note">No invite email — share the temp password directly.</p>
-      </form>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="addServiceModalOverlay" hidden>
-    <div class="modal card" role="dialog" aria-modal="true" aria-labelledby="addServiceModalTitle">
-      <div class="modal-head">
-        <h3 id="addServiceModalTitle">Add Service</h3>
-        <button class="modal-close" type="button" id="closeAddServiceModal" aria-label="Close">✕</button>
+        <button class="btn btn-outline btn-sm" type="button" id="exportCsvBtn">Export CSV</button>
       </div>
-      <form class="availability-form modal-service-form" id="addServiceForm">
-        <label>Name
-          <input type="text" name="name" required>
-        </label>
-        <label>Property
-          <select name="property" required>
-            <option value="music">Music</option>
-            <option value="barbers">Barbers</option>
-          </select>
-        </label>
-        <label>Duration (min)
-          <input type="number" name="duration_minutes" min="5" step="5" value="30" required>
-        </label>
-        <label>Price (CAD)
-          <input type="number" name="price_dollars" min="0" step="0.01" value="30" required>
-        </label>
-        <label>Category
-          <input type="text" name="category" placeholder="optional">
-        </label>
-        <button class="btn btn-gold" type="submit">Add Service</button>
-      </form>
     </div>
-  </div>
 
-  <section class="card portal-section oversight-section">
-    <div class="portal-section-head">
-      <h2>Bookings &amp; Payments</h2>
-      <button class="btn btn-gold btn-sm" type="button" id="exportCsvBtn">Export CSV</button>
+    <div id="monthView">
+      <div class="cal-weekhead" id="calWeekhead"></div>
+      <div class="cal-grid" id="calGrid"></div>
     </div>
-    <label class="oversight-filter-label">Filter by Property
-      <select id="oversightPropertyFilter">
-        <option value="">All Properties</option>
-        <option value="music">Music</option>
-        <option value="barbers">Barbers</option>
-      </select>
-    </label>
-    <div class="booking-list oversight-list" id="oversightList">
-      <p class="empty-note">Loading…</p>
+
+    <div id="agendaView" hidden>
+      <div class="agenda" id="agendaList"></div>
     </div>
   </section>
 </main>
+
+<div class="modal-overlay" id="detailOverlay" hidden>
+  <div class="modal card" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <div class="modal-head">
+      <h3 id="detailTitle">Booking</h3>
+      <button class="modal-close" type="button" id="detailClose" aria-label="Close">✕</button>
+    </div>
+    <div id="detailBody"></div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="assets/js/supabase-client.js"></script>
@@ -237,546 +129,309 @@
 
   document.getElementById("signOutBtn").addEventListener("click", signOut);
 
-  // ---------- Modals ----------
+  var DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-  function openModal(overlayId) {
-    var overlay = document.getElementById(overlayId);
-    overlay.hidden = false;
-  }
-  function closeModal(overlayId) {
-    document.getElementById(overlayId).hidden = true;
-  }
-  function wireModal(overlayId, openBtnId, closeBtnId, onOpen) {
-    document.getElementById(openBtnId).addEventListener("click", function () {
-      if (onOpen) onOpen();
-      openModal(overlayId);
-    });
-    document.getElementById(closeBtnId).addEventListener("click", function () { closeModal(overlayId); });
-    var overlay = document.getElementById(overlayId);
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) closeModal(overlayId);
-    });
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && !overlay.hidden) closeModal(overlayId);
+  var allBookings = [];
+  var state = { view: "month", cursor: startOfMonth(new Date()), property: "", barber: "" };
+
+  function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+  function sameDay(a, b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+  function escapeHtml(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
     });
   }
+  function money(cents){ return cents == null ? "" : "$" + (cents / 100).toFixed(2); }
+  function timeStr(d){ return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }); }
 
-  var allServices = [];
-
-  async function loadServices() {
-    var { data } = await supabaseClient.from("services").select("*").order("property").order("name");
-    allServices = data || [];
-  }
-
-  function serviceCheckboxesHtml(property, checkedIds) {
-    checkedIds = checkedIds || [];
-    var matching = allServices.filter(function (s) { return s.property === property; });
-    if (matching.length === 0) return '<p class="empty-note">No services for this property yet — add one in Service Catalog.</p>';
-    return matching.map(function (s) {
-      var checked = checkedIds.includes(s.id) ? "checked" : "";
-      return '<label style="flex-direction:row; align-items:center; gap:8px;">' +
-        '<input type="checkbox" value="' + s.id + '" ' + checked + '> ' + s.name +
-        '</label>';
-    }).join("");
-  }
-
-  // ---------- Team & Accounts ----------
-
-  function updateNewMemberFields() {
-    var role = document.getElementById("newMemberRole").value;
-    var property = document.getElementById("newMemberProperty").value;
-    var fields = document.getElementById("newMemberProviderFields");
-    fields.style.display = role === "teacher" ? "" : "none";
-    document.getElementById("newMemberServiceChecks").innerHTML = serviceCheckboxesHtml(property, []);
-  }
-  document.getElementById("newMemberRole").addEventListener("change", updateNewMemberFields);
-  document.getElementById("newMemberProperty").addEventListener("change", updateNewMemberFields);
-
-  function showAddMemberMessage(text, kind) {
-    var el = document.getElementById("addMemberMessage");
-    el.textContent = text;
-    el.className = "auth-message is-visible is-" + kind;
-  }
-  function clearAddMemberMessage() {
-    var el = document.getElementById("addMemberMessage");
-    el.textContent = "";
-    el.className = "auth-message";
-  }
-
-  wireModal("addMemberModalOverlay", "openAddMemberModal", "closeAddMemberModal", function () {
-    document.getElementById("addMemberForm").reset();
-    clearAddMemberMessage();
-    updateNewMemberFields();
-  });
-  wireModal("addServiceModalOverlay", "openAddServiceModal", "closeAddServiceModal", function () {
-    document.getElementById("addServiceForm").reset();
-  });
-
-  document.getElementById("addMemberForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    var form = e.target;
-    var submitBtn = form.querySelector('button[type="submit"]');
-    var role = form.role.value;
-    var property = form.property.value;
-    var checkedServiceIds = Array.from(document.querySelectorAll('#newMemberServiceChecks input:checked')).map(function (el) { return el.value; });
-
-    submitBtn.disabled = true;
-    try {
-      var { data, error } = await supabaseClient.functions.invoke("admin-provision-account", {
-        body: {
-          mode: "create",
-          email: form.email.value.trim(),
-          temp_password: form.temp_password.value,
-          name: form.name.value.trim(),
-          property: property,
-          role: role
-        }
-      });
-      if (error || !data || data.error) {
-        showAddMemberMessage((data && data.error) || "Couldn't create that account.", "error");
-        return;
-      }
-
-      if (role === "teacher") {
-        var { data: providerRow, error: providerError } = await supabaseClient
-          .from("providers")
-          .insert({
-            profile_id: data.profile_id,
-            property: property,
-            display_name: form.display_name.value.trim() || form.name.value.trim(),
-            specialty: form.specialty.value.trim() || null,
-            bio: form.bio.value.trim() || null
-          })
-          .select()
-          .single();
-        if (providerError) {
-          showAddMemberMessage("Account created, but the provider profile failed: " + providerError.message, "error");
-          return;
-        }
-        if (checkedServiceIds.length) {
-          await supabaseClient.from("provider_services").insert(
-            checkedServiceIds.map(function (id) { return { provider_id: providerRow.id, service_id: id }; })
-          );
-        }
-      }
-
-      form.reset();
-      updateNewMemberFields();
-      closeModal("addMemberModalOverlay");
-      renderTeam();
-    } catch (err) {
-      showAddMemberMessage("Something went wrong reaching the server. Please try again.", "error");
-    } finally {
-      submitBtn.disabled = false;
-    }
-  });
-
-  var allProfiles = [];
-
-  async function loadProfiles() {
+  // ---------- data ----------
+  async function loadBookings(){
     var { data } = await supabaseClient
-      .from("profiles")
-      .select("id, name, role, property, providers(id, display_name, specialty, bio, property)")
-      .order("name");
-    allProfiles = data || [];
-  }
-
-  async function renderTeam() {
-    await loadProfiles();
-    renderTeamList();
-  }
-
-  var ROLE_ORDER = { admin: 0, teacher: 1, student: 2 };
-
-  function renderTeamList() {
-    var search = document.getElementById("teamSearch").value.trim().toLowerCase();
-    var roleFilter = document.getElementById("teamRoleFilter").value;
-    var propertyFilter = document.getElementById("teamPropertyFilter").value;
-    var sort = document.getElementById("teamSort").value;
-
-    var data = allProfiles.filter(function (p) {
-      var provider = Array.isArray(p.providers) ? p.providers[0] : p.providers;
-      var matchesSearch = !search
-        || p.name.toLowerCase().indexOf(search) !== -1
-        || (provider && provider.display_name && provider.display_name.toLowerCase().indexOf(search) !== -1);
-      return matchesSearch && (!roleFilter || p.role === roleFilter) && (!propertyFilter || p.property === propertyFilter);
-    });
-
-    if (sort === "role") {
-      data = data.slice().sort(function (a, b) { return ROLE_ORDER[a.role] - ROLE_ORDER[b.role] || a.name.localeCompare(b.name); });
-    } else if (sort === "property") {
-      data = data.slice().sort(function (a, b) { return a.property.localeCompare(b.property) || a.name.localeCompare(b.name); });
-    } else {
-      data = data.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
-    }
-
-    var list = document.getElementById("teamList");
-    if (data.length === 0) {
-      list.innerHTML = '<p class="empty-note">No accounts match this filter.</p>';
-      return;
-    }
-    list.innerHTML = "";
-    data.forEach(function (p) {
-      var provider = Array.isArray(p.providers) ? p.providers[0] : p.providers;
-      var row = document.createElement("div");
-      row.className = "booking-row";
-      row.innerHTML =
-        '<span class="booking-when">' + p.name + '</span>' +
-        '<span class="booking-what"><span class="pill pill-' + (p.role === "teacher" ? "confirmed" : "pending") + '">' + p.role + '</span></span>' +
-        '<span class="booking-who">' + p.property + (provider ? ' &middot; ' + provider.display_name : '') + '</span>' +
-        '<span class="booking-tags">' +
-          '<button class="btn btn-sm btn-outline edit-member-btn" type="button">Edit</button>' +
-          '<button class="btn btn-sm btn-outline delete-member-btn" type="button">Delete</button>' +
-        '</span>';
-      list.appendChild(row);
-
-      row.querySelector(".edit-member-btn").addEventListener("click", function () {
-        var existing = list.querySelector(".member-edit-row");
-        if (existing) existing.remove();
-        if (row.nextElementSibling && row.nextElementSibling.classList.contains("member-edit-row") && row.nextElementSibling.dataset.profileId === p.id) {
-          return;
-        }
-        renderMemberEditRow(row, p, provider);
-      });
-
-      row.querySelector(".delete-member-btn").addEventListener("click", async function () {
-        if (!confirm("Permanently delete " + p.name + "'s account? This removes their login, provider profile (if any), and any bookings tied to them. This can't be undone.")) return;
-        var btn = this;
-        btn.disabled = true;
-        try {
-          var { data, error } = await supabaseClient.functions.invoke("admin-delete-account", {
-            body: { profile_id: p.id }
-          });
-          if (error || !data || data.error) {
-            alert((data && data.error) || "Couldn't delete that account.");
-            btn.disabled = false;
-            return;
-          }
-          renderTeam();
-        } catch (err) {
-          alert("Something went wrong reaching the server. Please try again.");
-          btn.disabled = false;
-        }
-      });
-    });
-  }
-
-  document.getElementById("teamSearch").addEventListener("input", renderTeamList);
-  document.getElementById("teamRoleFilter").addEventListener("change", renderTeamList);
-  document.getElementById("teamPropertyFilter").addEventListener("change", renderTeamList);
-  document.getElementById("teamSort").addEventListener("change", renderTeamList);
-
-  function renderMemberEditRow(afterRow, profile, provider) {
-    var editRow = document.createElement("div");
-    editRow.className = "card member-edit-row";
-    editRow.dataset.profileId = profile.id;
-    editRow.style.padding = "18px";
-    editRow.style.marginBottom = "8px";
-
-    var isTeacher = profile.role === "teacher";
-    editRow.innerHTML =
-      '<form class="availability-form member-edit-form">' +
-        '<label>Role' +
-          '<select name="role">' +
-            '<option value="student"' + (!isTeacher ? " selected" : "") + '>Student</option>' +
-            '<option value="teacher"' + (isTeacher ? " selected" : "") + '>Teacher / Provider</option>' +
-          '</select>' +
-        '</label>' +
-        (isTeacher ? (
-          '<label>Display Name<input type="text" name="display_name" value="' + (provider ? provider.display_name : "") + '"></label>' +
-          '<label>Specialty<input type="text" name="specialty" value="' + (provider ? (provider.specialty || "") : "") + '"></label>'
-        ) : '') +
-        '<button class="btn btn-gold btn-sm" type="submit">Save</button>' +
-      '</form>' +
-      (isTeacher ? '<div class="member-service-checks" style="margin-top:12px;"></div>' : '');
-
-    afterRow.insertAdjacentElement("afterend", editRow);
-
-    if (isTeacher && provider) {
-      supabaseClient.from("provider_services").select("service_id").eq("provider_id", provider.id).then(function (res) {
-        var checkedIds = (res.data || []).map(function (r) { return r.service_id; });
-        editRow.querySelector(".member-service-checks").innerHTML =
-          '<p class="section-label">Services Offered</p>' + serviceCheckboxesHtml(provider.property, checkedIds);
-      });
-    }
-
-    editRow.querySelector(".member-edit-form").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      var form = e.target;
-      var submitBtn = form.querySelector('button[type="submit"]');
-      var newRole = form.role.value;
-      submitBtn.disabled = true;
-      try {
-        var { error } = await supabaseClient.functions.invoke("admin-provision-account", {
-          body: { mode: "update", profile_id: profile.id, role: newRole }
-        });
-        if (error) {
-          alert("Couldn't update this account. Please try again.");
-          return;
-        }
-
-        if (newRole === "teacher") {
-          var displayName = form.display_name ? form.display_name.value.trim() : profile.name;
-          var specialty = form.specialty ? form.specialty.value.trim() : null;
-          var checkedIds = Array.from(editRow.querySelectorAll('.member-service-checks input:checked')).map(function (el) { return el.value; });
-
-          var providerRow = provider;
-          if (providerRow) {
-            await supabaseClient.from("providers").update({ display_name: displayName, specialty: specialty }).eq("id", providerRow.id);
-          } else {
-            var { data: newProvider } = await supabaseClient
-              .from("providers")
-              .insert({ profile_id: profile.id, property: profile.property, display_name: displayName, specialty: specialty })
-              .select()
-              .single();
-            providerRow = newProvider;
-          }
-          if (providerRow) {
-            await supabaseClient.from("provider_services").delete().eq("provider_id", providerRow.id);
-            if (checkedIds.length) {
-              await supabaseClient.from("provider_services").insert(
-                checkedIds.map(function (id) { return { provider_id: providerRow.id, service_id: id }; })
-              );
-            }
-          }
-        }
-
-        editRow.remove();
-        renderTeam();
-      } finally {
-        submitBtn.disabled = false;
-      }
-    });
-  }
-
-  // ---------- Service Catalog ----------
-
-  async function renderServices() {
-    await loadServices();
-    renderServiceList();
-  }
-
-  function renderServiceList() {
-    var propertyFilter = document.getElementById("servicePropertyFilter").value;
-    var sort = document.getElementById("serviceSort").value;
-
-    var data = allServices.filter(function (s) {
-      return !propertyFilter || s.property === propertyFilter;
-    });
-
-    if (sort === "price_asc") {
-      data = data.slice().sort(function (a, b) { return a.price_cents - b.price_cents; });
-    } else if (sort === "price_desc") {
-      data = data.slice().sort(function (a, b) { return b.price_cents - a.price_cents; });
-    } else if (sort === "duration") {
-      data = data.slice().sort(function (a, b) { return a.duration_minutes - b.duration_minutes; });
-    } else {
-      data = data.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
-    }
-
-    var list = document.getElementById("serviceList");
-    if (data.length === 0) {
-      list.innerHTML = '<p class="empty-note">No services match this filter.</p>';
-      return;
-    }
-    list.innerHTML = "";
-    data.forEach(function (s) {
-      var el = document.createElement("div");
-      el.className = "slot-row";
-      el.dataset.serviceId = s.id;
-      el.innerHTML =
-        '<span class="slot-day">' + s.name + ' &middot; ' + s.property + '</span>' +
-        '<span class="slot-time">' + s.duration_minutes + ' min &middot; $' + (s.price_cents / 100).toFixed(2) + '</span>' +
-        '<button class="slot-edit-btn" type="button" aria-label="Edit service" data-id="' + s.id + '">&#9998;</button>' +
-        '<button class="slot-remove" type="button" aria-label="Delete service" data-id="' + s.id + '">✕</button>';
-      list.appendChild(el);
-
-      el.querySelector(".slot-edit-btn").addEventListener("click", function () {
-        var existing = el.querySelector(".slot-edit-form");
-        if (existing) { existing.remove(); return; }
-        renderServiceEditForm(el, s);
-      });
-    });
-    list.querySelectorAll(".slot-remove").forEach(function (btn) {
-      btn.addEventListener("click", async function () {
-        if (!confirm("Delete this service? Providers currently offering it will lose that listing.")) return;
-        await supabaseClient.from("services").delete().eq("id", btn.dataset.id);
-        renderServices();
-      });
-    });
-  }
-
-  function renderServiceEditForm(row, service) {
-    var form = document.createElement("form");
-    form.className = "slot-edit-form";
-    form.innerHTML =
-      '<label>Name<input type="text" name="name" value="' + service.name + '" required></label>' +
-      '<label>Duration (min)<input type="number" name="duration_minutes" min="5" step="5" value="' + service.duration_minutes + '" required></label>' +
-      '<label>Price (CAD)<input type="number" name="price_dollars" min="0" step="0.01" value="' + (service.price_cents / 100).toFixed(2) + '" required></label>' +
-      '<label>Category<input type="text" name="category" value="' + (service.category || "") + '" placeholder="optional"></label>' +
-      '<button class="btn btn-gold btn-sm" type="submit">Save</button>';
-    row.appendChild(form);
-
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      var submitBtn = form.querySelector('button[type="submit"]');
-      submitBtn.disabled = true;
-      try {
-        await supabaseClient.from("services").update({
-          name: form.name.value.trim(),
-          duration_minutes: Number(form.duration_minutes.value),
-          price_cents: Math.round(Number(form.price_dollars.value) * 100),
-          category: form.category.value.trim() || null
-        }).eq("id", service.id);
-        renderServices();
-      } finally {
-        submitBtn.disabled = false;
-      }
-    });
-  }
-
-  document.getElementById("servicePropertyFilter").addEventListener("change", renderServiceList);
-  document.getElementById("serviceSort").addEventListener("change", renderServiceList);
-
-  document.getElementById("addServiceForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    var form = e.target;
-    var submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    try {
-      await supabaseClient.from("services").insert({
-        name: form.name.value.trim(),
-        property: form.property.value,
-        duration_minutes: Number(form.duration_minutes.value),
-        price_cents: Math.round(Number(form.price_dollars.value) * 100),
-        category: form.category.value.trim() || null
-      });
-      form.reset();
-      closeModal("addServiceModalOverlay");
-      renderServices();
-    } finally {
-      submitBtn.disabled = false;
-    }
-  });
-
-  // ---------- Bookings & Payments Oversight ----------
-
-  // Shared by the on-screen list (capped at 50 recent rows) and the CSV
-  // export (uncapped, so reconciliation gets the full history). The
-  // property filter applies to both.
-  async function fetchOversightRows(limit) {
-    var property = document.getElementById("oversightPropertyFilter").value;
-    var query = supabaseClient
       .from("bookings")
-      .select("*, services(name, property), providers(display_name), profiles:student_profile_id(name), payments(status, amount_cents)")
-      .order("slot_start", { ascending: false });
-    if (limit) query = query.limit(limit);
-    var { data } = await query;
-    return (data || []).filter(function (b) {
-      return !property || (b.services && b.services.property === property);
+      .select("id, slot_start, slot_end, status, guest_name, guest_email, service_name, provider_id, " +
+              "services(name, property), providers(display_name), profiles:student_profile_id(name, phone), payments(status, amount_cents)")
+      .order("slot_start", { ascending: true });
+
+    allBookings = (data || []).map(function(b){
+      var svc = Array.isArray(b.services) ? b.services[0] : b.services;
+      var prov = Array.isArray(b.providers) ? b.providers[0] : b.providers;
+      var prof = Array.isArray(b.profiles) ? b.profiles[0] : b.profiles;
+      var pay = b.payments && b.payments[0] ? b.payments[0] : null;
+      return {
+        id: b.id,
+        start: new Date(b.slot_start),
+        end: new Date(b.slot_end),
+        status: b.status,
+        service: (svc && svc.name) || b.service_name || "Service",
+        barber: (prov && prov.display_name) || "—",
+        providerId: b.provider_id,
+        customer: b.guest_name || (prof && prof.name) || "Customer",
+        email: b.guest_email || null,
+        phone: (prof && prof.phone) || null,
+        isGuest: !!b.guest_name,
+        property: (svc && svc.property) || "barbers",
+        paymentStatus: pay ? pay.status : "unpaid",
+        amountCents: pay ? pay.amount_cents : null
+      };
+    });
+
+    buildBarberFilter();
+  }
+
+  function buildBarberFilter(){
+    var sel = document.getElementById("barberFilter");
+    var seen = {};
+    var opts = ['<option value="">All providers</option>'];
+    allBookings.forEach(function(b){
+      if (b.providerId && !seen[b.providerId]){
+        seen[b.providerId] = true;
+        opts.push('<option value="' + b.providerId + '">' + escapeHtml(b.barber) + '</option>');
+      }
+    });
+    var prev = sel.value;
+    sel.innerHTML = opts.join("");
+    sel.value = prev;
+  }
+
+  function filtered(){
+    return allBookings.filter(function(b){
+      return (!state.property || b.property === state.property) &&
+             (!state.barber || b.providerId === state.barber);
     });
   }
 
-  async function renderOversight() {
-    var rows = await fetchOversightRows(50);
+  // ---------- month view ----------
+  function renderWeekhead(){
+    document.getElementById("calWeekhead").innerHTML = DOW.map(function(d){ return "<span>" + d + "</span>"; }).join("");
+  }
 
-    var list = document.getElementById("oversightList");
-    if (rows.length === 0) {
-      list.innerHTML = '<p class="empty-note">No bookings yet.</p>';
+  function renderMonth(){
+    var first = startOfMonth(state.cursor);
+    document.getElementById("calTitle").textContent = MONTHS[first.getMonth()] + " " + first.getFullYear();
+
+    var gridStart = new Date(first);
+    gridStart.setDate(first.getDate() - first.getDay());
+    var today = new Date();
+    var rows = filtered();
+    var grid = document.getElementById("calGrid");
+    grid.innerHTML = "";
+
+    for (var i = 0; i < 42; i++){
+      var day = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i);
+      var dayBookings = rows.filter(function(b){ return sameDay(b.start, day); })
+        .sort(function(a, b){ return a.start - b.start; });
+
+      var cell = document.createElement("div");
+      cell.className = "cal-cell" +
+        (day.getMonth() !== first.getMonth() ? " is-other" : "") +
+        (sameDay(day, today) ? " is-today" : "");
+      cell.innerHTML = '<span class="cal-date">' + day.getDate() + '</span>';
+
+      var shown = dayBookings.slice(0, 3);
+      shown.forEach(function(b){
+        var chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "cal-chip is-" + b.status;
+        chip.innerHTML = '<span class="ct">' + timeStr(b.start) + '</span><span class="cl">' + escapeHtml(b.service) + '</span>';
+        chip.addEventListener("click", function(e){ e.stopPropagation(); openDetail(b); });
+        cell.appendChild(chip);
+      });
+      if (dayBookings.length > 3){
+        var more = document.createElement("button");
+        more.type = "button";
+        more.className = "cal-more";
+        more.textContent = "+" + (dayBookings.length - 3) + " more";
+        cell.appendChild(more);
+      }
+
+      (function(d, list){
+        cell.addEventListener("click", function(){ if (list.length) openDay(d, list); });
+      })(day, dayBookings);
+
+      grid.appendChild(cell);
+    }
+  }
+
+  // ---------- agenda view ----------
+  function renderAgenda(){
+    var today = new Date();
+    document.getElementById("calTitle").textContent = "All upcoming & past";
+    var rows = filtered().slice().sort(function(a, b){ return a.start - b.start; });
+    var wrap = document.getElementById("agendaList");
+
+    if (!rows.length){
+      wrap.innerHTML = '<p class="empty-note">No bookings yet.</p>';
       return;
     }
-    list.innerHTML = "";
-    rows.forEach(function (b) {
-      var paymentStatus = b.payments && b.payments[0] ? b.payments[0].status : "pending";
-      var cancellable = b.status === "pending" || b.status === "confirmed";
-      var el = document.createElement("div");
-      el.className = "booking-row";
-      el.innerHTML =
-        '<span class="booking-when">' + formatDateTime(new Date(b.slot_start)) + '</span>' +
-        '<span class="booking-what">' + (b.services ? b.services.name : "Service") + '</span>' +
-        '<span class="booking-who">' + (b.profiles ? b.profiles.name : "Student") + ' with ' + (b.providers ? b.providers.display_name : "provider") + '</span>' +
-        '<span class="booking-tags">' +
-          '<span class="pill pill-' + b.status + '">' + b.status + '</span>' +
-          '<span class="pill pill-' + (paymentStatus === "paid" ? "paid" : "pending") + '">' + paymentStatus + '</span>' +
-          (cancellable ? '<button class="btn btn-sm btn-outline cancel-booking-btn" type="button" data-id="' + b.id + '" data-paid="' + (paymentStatus === "paid") + '">Cancel</button>' : '') +
-        '</span>';
-      list.appendChild(el);
+
+    var groups = [];
+    var byKey = {};
+    rows.forEach(function(b){
+      var key = b.start.toDateString();
+      if (!byKey[key]){ byKey[key] = { date: b.start, items: [] }; groups.push(byKey[key]); }
+      byKey[key].items.push(b);
     });
-    list.querySelectorAll(".cancel-booking-btn").forEach(function (btn) {
-      btn.addEventListener("click", async function () {
-        btn.disabled = true;
-        var cancelled = await cancelBooking(btn.dataset.id, btn.dataset.paid === "true");
-        if (cancelled) renderOversight();
-        else btn.disabled = false;
-      });
+
+    wrap.innerHTML = "";
+    groups.forEach(function(g){
+      var isPast = g.date < today && !sameDay(g.date, today);
+      var block = document.createElement("div");
+      block.className = "agenda-day";
+      var label = document.createElement("div");
+      label.className = "agenda-daylabel" + (isPast ? " is-past" : "");
+      label.innerHTML = g.date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" }) +
+        ' <span class="count">' + g.items.length + " booking" + (g.items.length > 1 ? "s" : "") + "</span>";
+      block.appendChild(label);
+      g.items.forEach(function(b){ block.appendChild(agendaRow(b)); });
+      wrap.appendChild(block);
     });
   }
 
-  document.getElementById("oversightPropertyFilter").addEventListener("change", renderOversight);
+  function agendaRow(b){
+    var row = document.createElement("div");
+    row.className = "agenda-row is-" + b.status;
+    row.innerHTML =
+      '<span class="ag-time">' + timeStr(b.start) + " – " + timeStr(b.end) + '</span>' +
+      '<span class="ag-svc">' + escapeHtml(b.service) + '</span>' +
+      '<span class="ag-who">' + escapeHtml(b.customer) + " · " + escapeHtml(b.barber) + '</span>' +
+      '<span class="ag-tags">' +
+        '<span class="pill pill-' + b.status + '">' + b.status + '</span>' +
+        '<span class="pill pill-' + (b.paymentStatus === "paid" ? "paid" : "pending") + '">' + b.paymentStatus + '</span>' +
+      '</span>';
+    row.addEventListener("click", function(){ openDetail(b); });
+    return row;
+  }
 
-  // ---------- CSV export ----------
+  // ---------- detail / day modals ----------
+  var overlay = document.getElementById("detailOverlay");
+  function showModal(){ overlay.hidden = false; }
+  function hideModal(){ overlay.hidden = true; }
+  document.getElementById("detailClose").addEventListener("click", hideModal);
+  overlay.addEventListener("click", function(e){ if (e.target === overlay) hideModal(); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && !overlay.hidden) hideModal(); });
 
-  function csvEscape(value) {
-    var s = value == null ? "" : String(value);
+  function openDay(date, list){
+    document.getElementById("detailTitle").textContent =
+      date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+    var body = document.getElementById("detailBody");
+    body.innerHTML = "";
+    var container = document.createElement("div");
+    container.className = "agenda";
+    var block = document.createElement("div");
+    block.className = "agenda-day";
+    list.forEach(function(b){ block.appendChild(agendaRow(b)); });
+    container.appendChild(block);
+    body.appendChild(container);
+    showModal();
+  }
+
+  function openDetail(b){
+    document.getElementById("detailTitle").textContent = b.service;
+    var whenStr = b.start.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) +
+      " · " + timeStr(b.start) + " – " + timeStr(b.end);
+    var rows =
+      '<div class="detail-list">' +
+        detailRow("When", whenStr) +
+        detailRow("Barber", escapeHtml(b.barber)) +
+        detailRow("Customer", escapeHtml(b.customer) + (b.isGuest ? " (guest)" : "")) +
+        (b.email ? detailRow("Email", '<a href="mailto:' + escapeHtml(b.email) + '">' + escapeHtml(b.email) + "</a>") : "") +
+        (b.phone ? detailRow("Phone", '<a href="tel:' + escapeHtml(b.phone) + '">' + escapeHtml(b.phone) + "</a>") : "") +
+        detailRow("Property", b.property) +
+        detailRow("Status", '<span class="pill pill-' + b.status + '">' + b.status + "</span>") +
+        detailRow("Payment", '<span class="pill pill-' + (b.paymentStatus === "paid" ? "paid" : "pending") + '">' + b.paymentStatus + "</span>" +
+          (b.amountCents != null ? " " + money(b.amountCents) : "")) +
+      '</div>';
+
+    var canCancel = b.status === "pending" || b.status === "confirmed";
+    var actions = canCancel
+      ? '<div class="modal-actions"><button class="btn btn-outline btn-sm" type="button" id="detailCancelBtn">Cancel booking</button></div>'
+      : "";
+
+    document.getElementById("detailBody").innerHTML = rows + actions;
+
+    if (canCancel){
+      document.getElementById("detailCancelBtn").addEventListener("click", async function(){
+        this.disabled = true;
+        var ok = await cancelBooking(b.id, b.paymentStatus === "paid");
+        if (ok){ hideModal(); await loadBookings(); render(); }
+        else this.disabled = false;
+      });
+    }
+    showModal();
+  }
+
+  function detailRow(k, v){
+    return '<div class="detail-row"><span class="k">' + k + '</span><span class="v">' + v + "</span></div>";
+  }
+
+  // ---------- CSV ----------
+  function csvEscape(v){
+    var s = v == null ? "" : String(v);
     return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   }
+  function stamp(d){ return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
 
-  // Local (not UTC) date/time so the spreadsheet matches what the portal
-  // displays — toISOString() would shift bookings near midnight onto the
-  // wrong day.
-  function localDateStamp(d) {
-    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-  }
-  function localTimeStamp(d) {
-    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
-  }
-
-  document.getElementById("exportCsvBtn").addEventListener("click", async function () {
-    var btn = this;
-    btn.disabled = true;
-    btn.textContent = "Exporting…";
-    try {
-      var rows = await fetchOversightRows(null);
-      var lines = [["Date", "Time", "Service", "Property", "Student", "Provider", "Booking Status", "Payment Status", "Amount (CAD)"].join(",")];
-      rows.forEach(function (b) {
-        var payment = b.payments && b.payments[0];
-        var start = new Date(b.slot_start);
-        lines.push([
-          localDateStamp(start),
-          localTimeStamp(start),
-          b.services ? b.services.name : "",
-          b.services ? b.services.property : "",
-          b.profiles ? b.profiles.name : "",
-          b.providers ? b.providers.display_name : "",
-          b.status,
-          payment ? payment.status : "pending",
-          payment && payment.amount_cents != null ? (payment.amount_cents / 100).toFixed(2) : ""
-        ].map(csvEscape).join(","));
-      });
-      var blob = new Blob([lines.join("\n")], { type: "text/csv" });
-      var a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      var property = document.getElementById("oversightPropertyFilter").value || "all";
-      a.download = "wisdominds-bookings-" + property + "-" + localDateStamp(new Date()) + ".csv";
-      a.click();
-      URL.revokeObjectURL(a.href);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Export CSV";
-    }
+  document.getElementById("exportCsvBtn").addEventListener("click", function(){
+    var rows = filtered();
+    var lines = [["Date","Time","Service","Property","Customer","Email","Phone","Barber","Status","Payment","Amount (CAD)"].join(",")];
+    rows.forEach(function(b){
+      lines.push([
+        stamp(b.start),
+        timeStr(b.start),
+        b.service, b.property, b.customer, b.email || "", b.phone || "", b.barber,
+        b.status, b.paymentStatus,
+        b.amountCents != null ? (b.amountCents/100).toFixed(2) : ""
+      ].map(csvEscape).join(","));
+    });
+    var blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "wisdominds-bookings-" + (state.property || "all") + "-" + stamp(new Date()) + ".csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
   });
 
-  (async function init() {
+  // ---------- view switching + nav ----------
+  function render(){
+    if (state.view === "month"){
+      document.getElementById("monthView").hidden = false;
+      document.getElementById("agendaView").hidden = true;
+      renderMonth();
+    } else {
+      document.getElementById("monthView").hidden = true;
+      document.getElementById("agendaView").hidden = false;
+      renderAgenda();
+    }
+  }
+
+  document.querySelectorAll(".cal-views button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll(".cal-views button").forEach(function(x){ x.classList.remove("is-active"); });
+      btn.classList.add("is-active");
+      state.view = btn.getAttribute("data-view");
+      render();
+    });
+  });
+  document.getElementById("calPrev").addEventListener("click", function(){
+    state.cursor = new Date(state.cursor.getFullYear(), state.cursor.getMonth() - 1, 1); render();
+  });
+  document.getElementById("calNext").addEventListener("click", function(){
+    state.cursor = new Date(state.cursor.getFullYear(), state.cursor.getMonth() + 1, 1); render();
+  });
+  document.getElementById("calToday").addEventListener("click", function(){
+    state.cursor = startOfMonth(new Date()); render();
+  });
+  document.getElementById("propertyFilter").addEventListener("change", function(){ state.property = this.value; render(); });
+  document.getElementById("barberFilter").addEventListener("change", function(){ state.barber = this.value; render(); });
+
+  (async function init(){
     var profile = await requireRole(["admin"]);
     if (!profile) return;
-
-    document.getElementById("welcomeHeading").textContent = "Welcome back, " + profile.name;
-
-    await loadServices();
-    updateNewMemberFields();
-    renderTeam();
-    renderServices();
-    renderOversight();
+    document.getElementById("welcomeHeading").textContent = "Bookings";
+    renderWeekhead();
+    await loadBookings();
+    render();
   })();
 </script>
 

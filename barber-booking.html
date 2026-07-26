@@ -284,6 +284,7 @@
   function chooseService(svc){
     selected.service = svc;
     selected.slot = null;
+    selected.barber = null;
     document.getElementById("step2Sub").textContent =
       svc.name + " · " + fmtDuration(svc.durationMin) + " · " + fmtPrice(svc.priceCents);
     // Reset any prior slot picking so durations re-compute for this service.
@@ -297,14 +298,34 @@
   // ---------- Step 2: barbers + availability ----------
   async function loadBarbers(){
     var wrap = document.getElementById("barberOptions");
-    if (barbersCache){ renderBarbers(barbersCache); return; }
-    var res = await supabaseClient
-      .from("providers")
-      .select("id, display_name, specialty")
-      .eq("property", "barbers");
-    var barbers = res.data || [];
-    barbersCache = barbers;
-    renderBarbers(barbers);
+    wrap.innerHTML = '<p class="empty-note">Loading barbers…</p>';
+
+    if (!barbersCache){
+      var res = await supabaseClient
+        .from("providers")
+        .select("id, display_name, specialty")
+        .eq("property", "barbers");
+      barbersCache = res.data || [];
+    }
+
+    // Only offer barbers who actually do the chosen service. This uses
+    // provider_services, which links Supabase service rows to providers, so
+    // it applies when the menu came from the Supabase catalog (serviceId set).
+    // Square-sourced services have no such mapping, so we show all barbers.
+    // If a service has no links at all (unseeded), fall back to all barbers
+    // rather than dead-ending the booking.
+    var allowed = barbersCache;
+    if (selected.service && selected.service.serviceId){
+      var linkRes = await supabaseClient
+        .from("provider_services")
+        .select("provider_id")
+        .eq("service_id", selected.service.serviceId);
+      var ids = (linkRes.data || []).map(function(l){ return l.provider_id; });
+      if (ids.length){
+        allowed = barbersCache.filter(function(b){ return ids.indexOf(b.id) !== -1; });
+      }
+    }
+    renderBarbers(allowed);
   }
 
   function initials(name){
