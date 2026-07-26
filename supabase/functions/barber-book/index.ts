@@ -27,7 +27,7 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const BOOKING_EMAIL_FROM = Deno.env.get("BOOKING_EMAIL_FROM") ?? "Wisdominds Barbers <onboarding@resend.dev>";
 const SHOP_TIMEZONE = "America/Toronto";
 const SHOP_NAME = "Wisdominds Barbers & Braiders";
-const SHOP_ADDRESS = "90 Simcoe St S, Oshawa, ON";
+const SHOP_ADDRESS = "2400 Finch Ave W, Unit 5, North York, ON";
 const SHOP_PHONE = "(416) 844-8287";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
